@@ -1,0 +1,3 @@
+label	value
+AAmatchFreq	100.01
+avgGranthamDist	0.00
