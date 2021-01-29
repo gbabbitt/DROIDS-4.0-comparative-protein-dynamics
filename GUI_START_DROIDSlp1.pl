@@ -1435,6 +1435,7 @@ sleep(1);
 print "chain lengths added to DROIDSfluctuationAVGchain.txt file\n\n";
 
 ################################################################################################
+if ($vector_enter eq 'y'){
 # parse atomcorr folder output to mirror atomflux folder output
 mkdir ("atomcorr") or die "please delete atomcorr folder from previous run\n";
 print "parsing atom corr data\n";
@@ -1556,7 +1557,7 @@ for (my $i = 0; $i < scalar @IN1; $i++){
     close OUT;
 }
 close IN1;
-
+}
 
 #####################################################
 
