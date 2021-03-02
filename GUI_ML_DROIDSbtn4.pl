@@ -202,43 +202,43 @@ for (my $v = 0; $v < scalar(@copies); $v++){
      $queryID_label = $variant_labels[0];
 # read test MD data into R
 # KNN
-print Rinput "datatableKNN = read.table('./testingData_$copyID/classpositionHISTOknn.txt', header = TRUE)\n"; 
+print Rinput "datatableKNN = read.table('./maxDemon_results/classpositionHISTOknn_$copyID.txt', header = TRUE)\n"; 
 $AAposition_knn = "datatableKNN\$position"; # AA position
 $sum_classifiers_knn = "datatableKNN\$sum"; # sum of classifiers
 print Rinput "dataframeKNN_$v = data.frame(pos1=$AAposition_knn+$startN, Y1val=$sum_classifiers_knn)\n";
 #print Rinput "print(dataframeKNN_$v)\n";
 # naive Bayes
-print Rinput "datatableNB = read.table('./testingData_$copyID/classpositionHISTOnb.txt', header = TRUE)\n"; 
+print Rinput "datatableNB = read.table('./maxDemon_results/classpositionHISTOnb_$copyID.txt', header = TRUE)\n"; 
 $AAposition_nb = "datatableNB\$position"; # AA position
 $sum_classifiers_nb = "datatableNB\$sum"; # sum of classifiers
 print Rinput "dataframeNB_$v = data.frame(pos1=$AAposition_nb+$startN, Y1val=$sum_classifiers_nb)\n";
 #print Rinput "print(dataframeNB_$v)\n";
 # LDA
-print Rinput "datatableLDA = read.table('./testingData_$copyID/classpositionHISTOlda.txt', header = TRUE)\n"; 
+print Rinput "datatableLDA = read.table('./maxDemon_results/classpositionHISTOlda_$copyID.txt', header = TRUE)\n"; 
 $AAposition_lda = "datatableLDA\$position"; # AA position
 $sum_classifiers_lda = "datatableLDA\$sum"; # sum of classifiers
 print Rinput "dataframeLDA_$v = data.frame(pos1=$AAposition_lda+$startN, Y1val=$sum_classifiers_lda)\n";
 #print Rinput "print(dataframeLDA_$v)\n";
 # QDA
-print Rinput "datatableQDA = read.table('./testingData_$copyID/classpositionHISTOqda.txt', header = TRUE)\n"; 
+print Rinput "datatableQDA = read.table('./maxDemon_results/classpositionHISTOqda_$copyID.txt', header = TRUE)\n"; 
 $AAposition_qda = "datatableQDA\$position"; # AA position
 $sum_classifiers_qda = "datatableQDA\$sum"; # sum of classifiers
 print Rinput "dataframeQDA_$v = data.frame(pos1=$AAposition_qda+$startN, Y1val=$sum_classifiers_qda)\n";
 #print Rinput "print(dataframeQDA_$v)\n";
 # SVM
-print Rinput "datatableSVM = read.table('./testingData_$copyID/classpositionHISTOsvm.txt', header = TRUE)\n"; 
+print Rinput "datatableSVM = read.table('./maxDemon_results/classpositionHISTOsvm_$copyID.txt', header = TRUE)\n"; 
 $AAposition_svm = "datatableSVM\$position"; # AA position
 $sum_classifiers_svm = "datatableSVM\$sum"; # sum of classifiers
 print Rinput "dataframeSVM_$v = data.frame(pos1=$AAposition_svm+$startN, Y1val=$sum_classifiers_svm)\n";
 #print Rinput "print(dataframeSVM_$v)\n";
 # random forest
-print Rinput "datatableRFOR = read.table('./testingData_$copyID/classpositionHISTOrfor.txt', header = TRUE)\n"; 
+print Rinput "datatableRFOR = read.table('./maxDemon_results/classpositionHISTOrfor_$copyID.txt', header = TRUE)\n"; 
 $AAposition_rfor = "datatableRFOR\$position"; # AA position
 $sum_classifiers_rfor = "datatableRFOR\$sum"; # sum of classifiers
 print Rinput "dataframeRFOR_$v = data.frame(pos1=$AAposition_rfor+$startN, Y1val=$sum_classifiers_rfor)\n";
 #print Rinput "print(dataframeRFOR_$v)\n";
 # adaboost
-print Rinput "datatableADA = read.table('./testingData_$copyID/classpositionHISTOada.txt', header = TRUE)\n"; 
+print Rinput "datatableADA = read.table('./maxDemon_results/classpositionHISTOada_$copyID.txt', header = TRUE)\n"; 
 $AAposition_ada = "datatableADA\$position"; # AA position
 $sum_classifiers_ada = "datatableADA\$sum"; # sum of classifiers
 print Rinput "dataframeADA_$v = data.frame(pos1=$AAposition_ada+$startN, Y1val=$sum_classifiers_ada)\n";
@@ -431,37 +431,37 @@ for (my $v = 0; $v < scalar(@variants); $v++){
      
 # read test MD data into Rprint Rinput "my_pvals_$variantID <- c()\n";
 # KNN
-print Rinput "datatableKNN = read.table('./testingData_$variantID/classpositionHISTOknn.txt', header = TRUE)\n"; 
+print Rinput "datatableKNN = read.table('./maxDemon_results/classpositionHISTOknn_$variantID.txt', header = TRUE)\n"; 
 $AAposition_knn = "datatableKNN\$position"; # AA position
 $sum_classifiers_knn = "datatableKNN\$sum"; # sum of classifiers
 print Rinput "dataframeKNN_$v = data.frame(pos1=$AAposition_knn+$startN, Y1val=$sum_classifiers_knn)\n";
 # naive Bayes
-print Rinput "datatableNB = read.table('./testingData_$variantID/classpositionHISTOnb.txt', header = TRUE)\n"; 
+print Rinput "datatableNB = read.table('./maxDemon_results/classpositionHISTOnb_$variantID.txt', header = TRUE)\n"; 
 $AAposition_nb = "datatableNB\$position"; # AA position
 $sum_classifiers_nb = "datatableNB\$sum"; # sum of classifiers
 print Rinput "dataframeNB_$v = data.frame(pos1=$AAposition_nb+$startN, Y1val=$sum_classifiers_nb)\n";
 # LDA
-print Rinput "datatableLDA = read.table('./testingData_$variantID/classpositionHISTOlda.txt', header = TRUE)\n"; 
+print Rinput "datatableLDA = read.table('./maxDemon_results/classpositionHISTOlda_$variantID.txt', header = TRUE)\n"; 
 $AAposition_lda = "datatableLDA\$position"; # AA position
 $sum_classifiers_lda = "datatableLDA\$sum"; # sum of classifiers
 print Rinput "dataframeLDA_$v = data.frame(pos1=$AAposition_lda+$startN, Y1val=$sum_classifiers_lda)\n";
 # QDA
-print Rinput "datatableQDA = read.table('./testingData_$variantID/classpositionHISTOqda.txt', header = TRUE)\n"; 
+print Rinput "datatableQDA = read.table('./maxDemon_results/classpositionHISTOqda_$variantID.txt', header = TRUE)\n"; 
 $AAposition_qda = "datatableQDA\$position"; # AA position
 $sum_classifiers_qda = "datatableQDA\$sum"; # sum of classifiers
 print Rinput "dataframeQDA_$v = data.frame(pos1=$AAposition_qda+$startN, Y1val=$sum_classifiers_qda)\n";
 # SVM
-print Rinput "datatableSVM = read.table('./testingData_$variantID/classpositionHISTOsvm.txt', header = TRUE)\n"; 
+print Rinput "datatableSVM = read.table('./maxDemon_results/classpositionHISTOsvm_$variantID.txt', header = TRUE)\n"; 
 $AAposition_svm = "datatableSVM\$position"; # AA position
 $sum_classifiers_svm = "datatableSVM\$sum"; # sum of classifiers
 print Rinput "dataframeSVM_$v = data.frame(pos1=$AAposition_svm+$startN, Y1val=$sum_classifiers_svm)\n";
 # random forest
-print Rinput "datatableRFOR = read.table('./testingData_$variantID/classpositionHISTOrfor.txt', header = TRUE)\n"; 
+print Rinput "datatableRFOR = read.table('./maxDemon_results/classpositionHISTOrfor_$variantID.txt', header = TRUE)\n"; 
 $AAposition_rfor = "datatableRFOR\$position"; # AA position
 $sum_classifiers_rfor = "datatableRFOR\$sum"; # sum of classifiers
 print Rinput "dataframeRFOR_$v = data.frame(pos1=$AAposition_rfor+$startN, Y1val=$sum_classifiers_rfor)\n";
 # adaboost
-print Rinput "datatableADA = read.table('./testingData_$variantID/classpositionHISTOada.txt', header = TRUE)\n"; 
+print Rinput "datatableADA = read.table('./maxDemon_results/classpositionHISTOada_$variantID.txt', header = TRUE)\n"; 
 $AAposition_ada = "datatableADA\$position"; # AA position
 $sum_classifiers_ada = "datatableADA\$sum"; # sum of classifiers
 print Rinput "dataframeADA_$v = data.frame(pos1=$AAposition_ada+$startN, Y1val=$sum_classifiers_ada)\n";
@@ -781,7 +781,7 @@ close Rinput;
 print "\n\n";
 print " copying plot\n\n";
 sleep(1);
-mkdir("maxDemon_results");
+#mkdir("maxDemon_results");
 my $oldfilename = "Rplots.pdf";
 my $newfilename = "./testingData_$queryID/learningPLOTcompare.pdf";
 copy($oldfilename, $newfilename);	
@@ -807,7 +807,6 @@ for (my $v = 0; $v < scalar(@variants); $v++){
 } # end for loop
 if(scalar(@variants) >= 4){system "gedit ./maxDemon_results/ANOVAresult.txt\n";}
 #}
-
 
 
 ###########################################
@@ -840,16 +839,16 @@ open(MI2, ">"."./testingData_$variantID/MImatrix_$learner"."_$variantID.txt") or
 print "\ncalculating mutual information matrix for $variantID \n";     
 sleep(1);
 
-for (my $i = 0; $i < $lengthID; $i++){
+for (my $i = 1; $i < $lengthID; $i++){
 	 $residue1 = $i;
       print "calculating MI values for residue\t"."$residue1 for $variantID\n";
-      open(POS1, "<"."./testingData_$variantID/indAAclass$learner/classAA_$refID"."_$i.txt") or die "could not open MI matrix file for ./testingData_$variantID/indAAclass$learner/classAA_$refID"."_$i.txt \n";    
+      open(POS1, "<"."./testingData_$variantID/indAAclass$learner/position_$i.txt") or die "could not open MI matrix file for ./testingData_$variantID/indAAclass$learner/position_$i.txt \n";    
       my @POS1 = <POS1>;
       if($i>0){print MI2 "\n";}
       #if($i==0){print MI2 "$residue1\t";}
       #if($i>0){print MI2 "\n"; print MI2 "$residue1\t";}
-      for (my $j = 0; $j < $lengthID; $j++){
-	     open(POS2, "<"."./testingData_$variantID/indAAclass$learner/classAA_$refID"."_$j.txt") or die "could not open MI matrix file for ./testingData_$variantID/indAAclass$learner/classAA_$refID"."_$j.txt \n";    
+      for (my $j = 1; $j < $lengthID; $j++){
+	     open(POS2, "<"."./testingData_$variantID/indAAclass$learner/position_$j.txt") or die "could not open MI matrix file for ./testingData_$variantID/indAAclass$learner/position_$j.txt \n";    
           my @POS2 = <POS2>;
           $residue2 = $j;
           

@@ -109,7 +109,7 @@ close IN2;
 
 #sub image2 {
 
-
+print "\n THIS FEATURE IS UNDER RECONSTRUCTION....try again later\n\n"; exit;
 
 print "Enter chain ID where color map should start (default = A)\n";
    print "i.e. color map only to homologous parts of bound and unbound

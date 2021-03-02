@@ -136,6 +136,7 @@ sleep(1);
 print "\n\nINITIATING MACHINE LEARNING ON PROTEIN ATOM FLUCTUATION ONLY\n\n";
 sleep(3);
 
+mkdir("maxDemon_results");
 
 if ($method_kern == 1 || $method_other == 1){
 # prompt user - choose best learning model to display
@@ -151,11 +152,6 @@ if($kerntype_enter eq 'RBF'){$kerntype = 'rbfdot';}
 elsif($kerntype_enter eq ''){$kerntype = 'vanilladot';}
 sleep(1);
 }
-
-sleep(1);print "MASK LEARNING ONLY TO SIGNIFICANTLY DIFFERENT DYNAMICS? (type 'on' or 'off' | default = 'off')\n\n";
-my $option = <STDIN>;
-chop($option);
-if ($option eq ''){$option = 'off';}
 
 
 for (my $g = 0; $g < 2; $g++){
@@ -176,7 +172,7 @@ for (my $p = 0; $p < scalar @MUT; $p++){
 # initialize classpositionHISTO data files (zero values) - for R plots
 
 # KNN method
-open (OUT, ">"."./testingData_$fileIDq/classpositionHISTOknn.txt\n");
+open (OUT, ">"."./maxDemon_results/classpositionHISTOknn_$fileIDq.txt\n");
 print OUT "position\t"."sum\n";
 for (my $r = 1; $r<=$lengthID; $r++){
    $AApos = $r;
@@ -185,7 +181,7 @@ for (my $r = 1; $r<=$lengthID; $r++){
    }
 close OUT;
 # NB method
-open (OUT, ">"."./testingData_$fileIDq/classpositionHISTOnb.txt\n");
+open (OUT, ">"."./maxDemon_results/classpositionHISTOnb_$fileIDq.txt\n");
 print OUT "position\t"."sum\n";
 for (my $r = 1; $r<=$lengthID; $r++){
    $AApos = $r;
@@ -194,7 +190,7 @@ for (my $r = 1; $r<=$lengthID; $r++){
    }
 close OUT;
 # LDA method
-open (OUT, ">"."./testingData_$fileIDq/classpositionHISTOlda.txt\n");
+open (OUT, ">"."./maxDemon_results/classpositionHISTOlda_$fileIDq.txt\n");
 print OUT "position\t"."sum\n";
 for (my $r = 1; $r<=$lengthID; $r++){
    $AApos = $r;
@@ -203,7 +199,7 @@ for (my $r = 1; $r<=$lengthID; $r++){
    }
 close OUT;
 # QDA method
-open (OUT, ">"."./testingData_$fileIDq/classpositionHISTOqda.txt\n");
+open (OUT, ">"."./maxDemon_results/classpositionHISTOqda_$fileIDq.txt\n");
 print OUT "position\t"."sum\n";
 for (my $r = 1; $r<=$lengthID; $r++){
    $AApos = $r;
@@ -212,7 +208,7 @@ for (my $r = 1; $r<=$lengthID; $r++){
    }
 close OUT;
 # SVM method
-open (OUT, ">"."./testingData_$fileIDq/classpositionHISTOsvm.txt\n");
+open (OUT, ">"."./maxDemon_results/classpositionHISTOsvm_$fileIDq.txt\n");
 print OUT "position\t"."sum\n";
 for (my $r = 1; $r<=$lengthID; $r++){
    $AApos = $r;
@@ -220,7 +216,7 @@ for (my $r = 1; $r<=$lengthID; $r++){
    print OUT "$AApos\t"."$sum_class\n";
    }
 # RFOR method
-open (OUT, ">"."./testingData_$fileIDq/classpositionHISTOrfor.txt\n");
+open (OUT, ">"."./maxDemon_results/classpositionHISTOrfor_$fileIDq.txt\n");
 print OUT "position\t"."sum\n";
 for (my $r = 1; $r<=$lengthID; $r++){
    $AApos = $r;
@@ -229,7 +225,7 @@ for (my $r = 1; $r<=$lengthID; $r++){
    }
 close OUT;
 # ADABOOST method
-open (OUT, ">"."./testingData_$fileIDq/classpositionHISTOada.txt\n");
+open (OUT, ">"."./maxDemon_results/classpositionHISTOada_$fileIDq.txt\n");
 print OUT "position\t"."sum\n";
 for (my $r = 1; $r<=$lengthID; $r++){
    $AApos = $r;
@@ -242,272 +238,92 @@ close OUT;
 ############################################
 if ($method_bnp == 1){
      print "running KNN classifier\n";
-     mkdir("./testingData_$fileIDq/indAAclassKNNtemp");     
- for (my $p = 1; $p<=$framefactor; $p++){
-     $add = $p*$framegroups-$framegroups;
-     $total = $framefactor*$framegroups;
- for (my $r = 0; $r<$lengthID; $r++){
+     mkdir("./testingData_$fileIDq/indAAclassKNN");     
+ for (my $r = 1; $r<=$lengthID; $r++){
    print "\n\nKNN classifier learning residue $r on $fileIDq\n\n";
    sleep(1);
    open (Rinput, "| R --vanilla")||die "could not start R command line\n";
-   # load plotting libraries
+   # load libraries
    print Rinput "library(ggplot2)\n";
    print Rinput "library(class)\n";
    # read data into R
-   print Rinput "dataT = read.table('indAAtrain/fluxtimeAA_$refID"."_$r.txt', header = TRUE)\n";
-   print Rinput "dataD = read.table('testingData_$fileIDq/indAAtest/fluxtimeAA_$fileIDq"."_$r.txt', header = TRUE)\n";
+   print Rinput "dataT = read.table('trainingData/position$r', header = TRUE)\n";
+   print Rinput "dataD = read.table('testingData_$fileIDq/position$r', header = TRUE)\n";
    print Rinput "class <- dataT\$class\n"; # training class
    #print Rinput "print(dataD)\n";
    print Rinput "train <- dataT\n";
    print Rinput "train <- train[-c(1)]\n"; # drops class column
    print Rinput "test <- dataD\n";
-   #print Rinput "print(test)\n";
-   # define subset of dataD to match size of dataT
-   if ($p > 1){
-   print Rinput "test <- test[,$add:$total]\n";
-   #print Rinput "print(test)\n";
-   }
-   if ($p == 1){
-   print Rinput "sink('./testingData_$fileIDq/indAAclassKNNtemp/classAA_$fileIDq"."_$r.txt')\n";
-   }
-   if ($p > 1){
-   print Rinput "sink('./testingData_$fileIDq/indAAclassKNNtemp/classAA_$fileIDq"."_$r.txt', append = TRUE)\n";
-   }
-   print Rinput "for(i in 1:length(train)){
-   train_slice <- train[,i, drop=FALSE]
-   ref_train_slice <- train_slice[class == 0,]
-   test_slice <- test[,i, drop=FALSE]
-   mean_test_slice <- mean(test_slice[,1])
-   mean_ref_train_slice <- mean(ref_train_slice)
-   lengthN <- length(ref_train_slice)
-   Kval <- round(sqrt(lengthN))
-   delta_rmsf = (mean_test_slice - mean_ref_train_slice)
-   knn.pred <- knn(train_slice, test_slice, class, k=Kval)
-   myKNN1 <- as.numeric(knn.pred[1])
-   myKNN2 <- as.numeric(knn.pred[2])
-   myKNN3 <- as.numeric(knn.pred[3])
-   myKNN4 <- as.numeric(knn.pred[4])
-   my_avgKNN = (myKNN1+myKNN2+myKNN3+myKNN4)/4-1
-   if(my_avgKNN > 0.5){my_KNN = 1}
-   if(my_avgKNN < 0.5){my_KNN = 0}
-   if(my_avgKNN == 0.5){my_KNN = 0.5}
-   print (i)
-   print(knn.pred)
-   print (my_KNN)
-   print (delta_rmsf)
-   }\n";
+   print Rinput "test <- test[-c(1)]\n"; # drops class column
+   print Rinput "print(head(train))\n";
+   print Rinput "print(head(test))\n";
+   print Rinput "lengthN <- length(train)\n";
+   print Rinput "Kval <- round(sqrt(lengthN))\n";
+   print Rinput "knn.pred <- knn(train, test, class, k=Kval)\n";
+   print Rinput "my_zero <- sum(knn.pred == 0)\n";
+   print Rinput "my_one <- sum(knn.pred == 1)\n";
+   print Rinput "my_freq <- my_zero/(my_zero + my_one)\n";
+   print Rinput "print(my_freq)\n";
+   print Rinput "mean_test <- mean(test[,1])\n";
+   print Rinput "mean_train <- mean(train[,1])\n";
+   print Rinput "delta_rmsf = (mean_test - mean_train)\n";
+   print Rinput "sink('./testingData_$fileIDq/indAAclassKNN/position"."_$r.txt')\n";
+   print Rinput "print(knn.pred)\n";
+   print Rinput "print(my_freq)\n";
+   print Rinput "print(delta_rmsf)\n";
    print Rinput "sink()\n";
    # write to output file and quit R
    print Rinput "q()\n";# quit R 
    print Rinput "n\n";# save workspace image?
    close Rinput;
    }
- } # end iterations 
- mkdir("./testingData_$fileIDq/indAAclassKNN");
- mkdir("./testingData_$fileIDq/indAAdrmsf");
- if ($option eq "on"){  # apply mask...learn only where KS test is signif
- for (my $t = 0; $t < $lengthID; $t++){
-   open(OUT, ">"."./testingData_$fileIDq/indAAclassKNN/classAA_$refID"."_$t".".txt")||die "could not create AA time series file\n";
-   open(OUT2, ">"."./testingData_$fileIDq/indAAdrmsf/drmsfAA_$refID"."_$t".".txt")||die "could not create AA time series file\n"; 
-   open(IN, "<"."./testingData_$fileIDq/indAAclassKNNtemp/classAA_$fileIDq"."_$t".".txt")||die "could not open temp time series file\n";
-   open(IN2, "<"."./DROIDS_results_$queryID"."_$refID"."_flux_$cutoffValue/adjustKStests".".txt")||die "could not open adjustKStests.txt file\n";
-    my @IN = <IN>;
-    my @IN2 = <IN2>;
-    for (my $a = 0; $a < scalar @IN; $a++) {
-	$INrow = $IN[$a];
-     $nextINrow = $IN[$a+1];
-     $nextnextINrow = $IN[$a+2];
-     @INrow = split(/\s+/, $INrow);
-	@nextINrow = split(/\s+/, $nextINrow);
-     @nextnextINrow = split(/\s+/, $nextnextINrow);
-     $search = @INrow[0];
-     $classvalue = @nextINrow[1];
-     $dRMSF = @nextnextINrow[1];
-     for (my $aa = 0; $aa < scalar @IN2; $aa++) {
-        $IN2row = $IN2[$aa];
-        @IN2row = split(/\s+/, $IN2row);
-        $AApos = @IN2row[0];
-        $ns = @IN2row[5];
-        if ($AApos == $t && $search eq "Levels:" && $ns eq "ns"){print OUT "0\n";}
-        if ($AApos == $t && $search eq "Levels:" && $ns ne "ns"){print OUT "$classvalue\n"; print OUT2 "$dRMSF\n";}
-        }
-     }
-   close IN;
-   close IN2;
-   close OUT;
-   close OUT2;
- }
- }
- 
- if ($option eq "off"){  # no mask option applied
- for (my $t = 0; $t < $lengthID; $t++){
-   open(OUT, ">"."./testingData_$fileIDq/indAAclassKNN/classAA_$refID"."_$t".".txt")||die "could not create AA time series file\n";
-   open(OUT2, ">"."./testingData_$fileIDq/indAAdrmsf/drmsfAA_$refID"."_$t".".txt")||die "could not create AA time series file\n";
-   open(IN, "<"."./testingData_$fileIDq/indAAclassKNNtemp/classAA_$fileIDq"."_$t".".txt")||die "could not open temp time series file\n";
-    my @IN = <IN>;
-    for (my $a = 0; $a < scalar @IN; $a++) {
-	$INrow = $IN[$a];
-     $nextINrow = $IN[$a+1];
-     $nextnextINrow = $IN[$a+2];
-     @INrow = split(/\s+/, $INrow);
-	@nextINrow = split(/\s+/, $nextINrow);
-     @nextnextINrow = split(/\s+/, $nextnextINrow);
-     $search = @INrow[0];
-     $classvalue = @nextINrow[1];
-     $dRMSF = @nextnextINrow[1];
-     if ($search eq "Levels:"){print OUT "$classvalue\n"; print OUT2 "$dRMSF\n";} 
-     }
-   close IN;
-   close OUT;
-   close OUT2;
- } 
-     
- }
- 
-  
  
 }
+
 
 ############################################
 if ($method_dist == 1){ 
      print "running naive Bayes classifier\n";
-     mkdir("./testingData_$fileIDq/indAAclassNBtemp");     
- for (my $r = 0; $r<$lengthID; $r++){
+     mkdir("./testingData_$fileIDq/indAAclassNB");     
+ for (my $r = 1; $r<=$lengthID; $r++){
    print "\n\nNB classifier learning residue $r on $fileIDq\n\n";
    sleep(1);
    open (Rinput, "| R --vanilla")||die "could not start R command line\n";
-   # load plotting libraries
+   # load libraries
    print Rinput "library(ggplot2)\n";
    print Rinput "library(class)\n";
    print Rinput "library(e1071)\n";
-   print Rinput "library(doParallel)\n";
    # read data into R
-   print Rinput "dataT = read.table('indAAtrain/fluxtimeAA_$refID"."_$r.txt', header = TRUE)\n";
-   print Rinput "dataD = read.table('testingData_$fileIDq/indAAtest/fluxtimeAA_$fileIDq"."_$r.txt', header = TRUE)\n";
+   print Rinput "dataT = read.table('trainingData/position$r', header = TRUE)\n";
+   print Rinput "dataD = read.table('testingData_$fileIDq/position$r', header = TRUE)\n";
    print Rinput "class <- dataT\$class\n"; # training class
-   $c1 = "dataT\$c1";
-   $c2 = "dataT\$c2";
-   $c3 = "dataT\$c3";
-   $c4 = "dataT\$c4";
-   $c5 = "dataT\$c5";
+   #print Rinput "print(dataD)\n";
    print Rinput "train <- dataT\n";
-   print Rinput "train <- train[-c(1)]\n";
+   print Rinput "train <- train[-c(1)]\n"; # drops class column
    print Rinput "test <- dataD\n";
-   #print Rinput "print(train)\n";
-   #print Rinput "print(test)\n";
-   print Rinput "my_bind <- vector()
-   classes <- vector()
-   for(i in 1:length(test)){
-     new <- class
-     my_bind = cbind(new, classes)
-     classes <- my_bind
-     }
-   classes <- as.data.frame(classes)
-   stack_class <- stack(classes)
-   names(stack_class)<-c(\"class\", \"slice\")
-   stack_class_slice = stack_class[,1, drop=FALSE]
-   stack_train <- stack(train)
-   names(stack_train)<-c(\"c1\", \"slice\")
-   stack_train_slice = stack_train[,1, drop=FALSE]\n";
-   print Rinput "sink('./testingData_$fileIDq/indAAclassNBtemp/classAA_$fileIDq"."_$r.txt')\n";
-   print Rinput "numCores <- detectCores()\n";
-   print Rinput "print(numCores)\n";
-   #print Rinput "cl <- makeCluster(numCores, type='FORK')\n";  
-   print Rinput "registerDoParallel(numCores)\n";
-   #print Rinput "for(i in 1:length(test)){
-   print Rinput "foreach(i=1:length(test), .combine=rbind) %dopar% {
-   train_slice = stack_train_slice
-   class_slice = stack_class_slice
-   ref_train_slice <- train_slice[class == 0,]
-   test_slice <- test[,i, drop=FALSE]
-   names(test_slice)<-c(\"c1\")
-   mean_test_slice <- mean(test_slice[,1])
-   mean_ref_train_slice <- mean(ref_train_slice)
-   delta_rmsf = (mean_test_slice - mean_ref_train_slice)
-   ref_train_slice <- train_slice[class == 0,]
-   xy <- data.frame(class_slice, train_slice)
-   nb.xy   <- naiveBayes(as.factor(class)~., data=xy)
-   nb.pred <- predict(nb.xy, as.data.frame(test_slice), type='class')
-   myNB1 <- as.numeric(nb.pred[1])
-   myNB2 <- as.numeric(nb.pred[2])
-   myNB3 <- as.numeric(nb.pred[3])
-   myNB4 <- as.numeric(nb.pred[4])
-   my_avgNB = (myNB1+myNB2+myNB3+myNB4)/4-1
-   if(my_avgNB > 0.5){my_NB = 1}
-   if(my_avgNB < 0.5){my_NB = 0}
-   if(my_avgNB == 0.5){my_NB = 0.5}
-   print (i)
-   print(nb.pred)
-   print(my_NB)
-   print(delta_rmsf)
-   }\n";
+   print Rinput "test <- test[-c(1)]\n"; # drops class column
+   print Rinput "print(head(train))\n";
+   print Rinput "print(head(test))\n";
+   print Rinput "xy <- data.frame(class, train)\n";
+   print Rinput "nb.xy   <- naiveBayes(as.factor(class)~., data=xy)\n";
+   print Rinput "nb.pred <- predict(nb.xy, as.data.frame(test), type='class')\n";
+   print Rinput "my_zero <- sum(nb.pred == 0)\n";
+   print Rinput "my_one <- sum(nb.pred == 1)\n";
+   print Rinput "my_freq <- my_zero/(my_zero + my_one)\n";
+   print Rinput "print(my_freq)\n";
+   print Rinput "mean_test <- mean(test[,1])\n";
+   print Rinput "mean_train <- mean(train[,1])\n";
+   print Rinput "delta_rmsf = (mean_test - mean_train)\n";
+   print Rinput "sink('./testingData_$fileIDq/indAAclassNB/position"."_$r.txt')\n";
+   print Rinput "print(nb.pred)\n";
+   print Rinput "print(my_freq)\n";
+   print Rinput "print(delta_rmsf)\n";
    print Rinput "sink()\n";
    # write to output file and quit R
    print Rinput "q()\n";# quit R 
    print Rinput "n\n";# save workspace image?
    close Rinput;
    }
-  
- mkdir("./testingData_$fileIDq/indAAclassNB");
- mkdir("./testingData_$fileIDq/indAAdrmsf");
- if ($option eq "on"){  # apply mask...learn only where KS test is signif
- for (my $t = 0; $t < $lengthID; $t++){
-   open(OUT, ">"."./testingData_$fileIDq/indAAclassNB/classAA_$refID"."_$t".".txt")||die "could not create AA time series file\n";
-   open(OUT2, ">"."./testingData_$fileIDq/indAAdrmsf/drmsfAA_$refID"."_$t".".txt")||die "could not create AA time series file\n"; 
-   open(IN, "<"."./testingData_$fileIDq/indAAclassNBtemp/classAA_$fileIDq"."_$t".".txt")||die "could not open temp time series file\n";
-   open(IN2, "<"."./DROIDS_results_$queryID"."_$refID"."_flux_$cutoffValue/adjustKStests".".txt")||die "could not open adjustKStests.txt file\n";
-    my @IN = <IN>;
-    my @IN2 = <IN2>;
-    for (my $a = 0; $a < scalar @IN; $a++) {
-	$INrow = $IN[$a];
-     $nextINrow = $IN[$a+1];
-     $nextnextINrow = $IN[$a+2];
-     @INrow = split(/\s+/, $INrow);
-	@nextINrow = split(/\s+/, $nextINrow);
-     @nextnextINrow = split(/\s+/, $nextnextINrow);
-     $search = @INrow[0];
-     $classvalue = @nextINrow[1];
-     $dRMSF = @nextnextINrow[1];
-     for (my $aa = 0; $aa < scalar @IN2; $aa++) {
-        $IN2row = $IN2[$aa];
-        @IN2row = split(/\s+/, $IN2row);
-        $AApos = @IN2row[0];
-        $ns = @IN2row[5];
-        if ($AApos == $t && $search eq "Levels:" && $ns eq "ns"){print OUT "0\n";}
-        if ($AApos == $t && $search eq "Levels:" && $ns ne "ns"){print OUT "$classvalue\n"; print OUT2 "$dRMSF\n";}
-        }
-     }
-   close IN;
-   close IN2;
-   close OUT;
-   close OUT2;
- }
- }
- 
- if ($option eq "off"){  # no mask option applied
- for (my $t = 0; $t < $lengthID; $t++){
-   open(OUT, ">"."./testingData_$fileIDq/indAAclassNB/classAA_$refID"."_$t".".txt")||die "could not create AA time series file\n";
-   open(OUT2, ">"."./testingData_$fileIDq/indAAdrmsf/drmsfAA_$refID"."_$t".".txt")||die "could not create AA time series file\n";
-   open(IN, "<"."./testingData_$fileIDq/indAAclassNBtemp/classAA_$fileIDq"."_$t".".txt")||die "could not open temp time series file\n";
-    my @IN = <IN>;
-    for (my $a = 0; $a < scalar @IN; $a++) {
-	$INrow = $IN[$a];
-     $nextINrow = $IN[$a+1];
-     $nextnextINrow = $IN[$a+2];
-     @INrow = split(/\s+/, $INrow);
-	@nextINrow = split(/\s+/, $nextINrow);
-     @nextnextINrow = split(/\s+/, $nextnextINrow);
-     $search = @INrow[0];
-     $classvalue = @nextINrow[1];
-     $dRMSF = @nextnextINrow[1];
-     if ($search eq "Levels:"){print OUT "$classvalue\n"; print OUT2 "$dRMSF\n";} 
-     }
-   close IN;
-   close OUT;
-   close OUT2;
- } 
-     
- }
  
 }
 
@@ -515,731 +331,234 @@ if ($method_dist == 1){
 ############################################
 if ($method_dist == 1){
      print "running linear discriminant analysis classifier\n";
-     mkdir("./testingData_$fileIDq/indAAclassLDAtemp");     
- for (my $r = 0; $r<$lengthID; $r++){
+     mkdir("./testingData_$fileIDq/indAAclassLDA");     
+ for (my $r = 1; $r<=$lengthID; $r++){
    print "\n\nLDA classifier learning residue $r on $fileIDq\n\n";
    sleep(1);
    open (Rinput, "| R --vanilla")||die "could not start R command line\n";
-   # load plotting libraries
+   # load libraries
    print Rinput "library(ggplot2)\n";
    print Rinput "library(class)\n";
    print Rinput "library(MASS)\n";
-   print Rinput "library(doParallel)\n";
    # read data into R
-   print Rinput "dataT = read.table('indAAtrain/fluxtimeAA_$refID"."_$r.txt', header = TRUE)\n";
-   print Rinput "dataD = read.table('testingData_$fileIDq/indAAtest/fluxtimeAA_$fileIDq"."_$r.txt', header = TRUE)\n";
+   print Rinput "dataT = read.table('trainingData/position$r', header = TRUE)\n";
+   print Rinput "dataD = read.table('testingData_$fileIDq/position$r', header = TRUE)\n";
    print Rinput "class <- dataT\$class\n"; # training class
-   $c1 = "dataT\$c1";
-   $c2 = "dataT\$c2";
-   $c3 = "dataT\$c3";
-   $c4 = "dataT\$c4";
-   $c5 = "dataT\$c5";
+   #print Rinput "print(dataD)\n";
    print Rinput "train <- dataT\n";
-   print Rinput "train <- train[-c(1)]\n";
+   print Rinput "train <- train[-c(1)]\n"; # drops class column
    print Rinput "test <- dataD\n";
-   #print Rinput "print(train)\n";
-   #print Rinput "print(test)\n";
-   print Rinput "my_bind <- vector()
-   classes <- vector()
-   for(i in 1:length(test)){
-     new <- class
-     my_bind = cbind(new, classes)
-     classes <- my_bind
-     }
-   classes <- as.data.frame(classes)
-   stack_class <- stack(classes)
-   names(stack_class)<-c(\"class\", \"slice\")
-   stack_class_slice = stack_class[,1, drop=FALSE]
-   stack_train <- stack(train)
-   names(stack_train)<-c(\"c1\", \"slice\")
-   stack_train_slice = stack_train[,1, drop=FALSE]\n";
-   print Rinput "sink('./testingData_$fileIDq/indAAclassLDAtemp/classAA_$fileIDq"."_$r.txt')\n";
-   print Rinput "numCores <- detectCores()\n";
-   print Rinput "print(numCores)\n";
-   #print Rinput "cl <- makeCluster(numCores, type='FORK')\n";  
-   print Rinput "registerDoParallel(numCores)\n";
-   #print Rinput "for(i in 1:length(test)){
-   print Rinput "foreach(i=1:length(test), .combine=rbind) %dopar% {
-   train_slice = stack_train_slice
-   class_slice = stack_class_slice
-   ref_train_slice <- train_slice[class == 0,]
-   test_slice <- test[,i, drop=FALSE]
-   names(test_slice)<-c(\"c1\")
-   mean_test_slice <- mean(test_slice[,1])
-   mean_ref_train_slice <- mean(ref_train_slice)
-   delta_rmsf = (mean_test_slice - mean_ref_train_slice)
-   ref_train_slice <- train_slice[class == 0,]
-   xy <- data.frame(class_slice, train_slice)
-   lda.xy   <- lda(as.factor(class)~., data=xy)
-   lda.pred <- predict(lda.xy, as.data.frame(test_slice))\$class
-   myLDA1 <- as.numeric(lda.pred[1])
-   myLDA2 <- as.numeric(lda.pred[2])
-   myLDA3 <- as.numeric(lda.pred[3])
-   myLDA4 <- as.numeric(lda.pred[4])
-   my_avgLDA = (myLDA1+myLDA2+myLDA3+myLDA4)/4-1
-   if(my_avgLDA > 0.5){my_LDA = 1}
-   if(my_avgLDA < 0.5){my_LDA = 0}
-   if(my_avgLDA == 0.5){my_LDA = 0.5}
-   print (i)
-   print(lda.pred)
-   print(my_LDA)
-   print(delta_rmsf)
-   }\n";
+   print Rinput "test <- test[-c(1)]\n"; # drops class column
+   print Rinput "print(head(train))\n";
+   print Rinput "print(head(test))\n";
+   print Rinput "xy <- data.frame(class, train)\n";
+   print Rinput "lda.xy   <- lda(as.factor(class)~., data=xy)\n";
+   print Rinput "lda.pred <- predict(lda.xy, as.data.frame(test))\$class\n";
+   print Rinput "my_zero <- sum(lda.pred == 0)\n";
+   print Rinput "my_one <- sum(lda.pred == 1)\n";
+   print Rinput "my_freq <- my_zero/(my_zero + my_one)\n";
+   print Rinput "print(my_freq)\n";
+   print Rinput "mean_test <- mean(test[,1])\n";
+   print Rinput "mean_train <- mean(train[,1])\n";
+   print Rinput "delta_rmsf = (mean_test - mean_train)\n";
+   print Rinput "sink('./testingData_$fileIDq/indAAclassLDA/position"."_$r.txt')\n";
+   print Rinput "print(lda.pred)\n";
+   print Rinput "print(my_freq)\n";
+   print Rinput "print(delta_rmsf)\n";
    print Rinput "sink()\n";
    # write to output file and quit R
    print Rinput "q()\n";# quit R 
    print Rinput "n\n";# save workspace image?
    close Rinput;
    }
-  
- mkdir("./testingData_$fileIDq/indAAclassLDA");
- mkdir("./testingData_$fileIDq/indAAdrmsf");
- if ($option eq "on"){  # apply mask...learn only where KS test is signif
- for (my $t = 0; $t < $lengthID; $t++){
-   open(OUT, ">"."./testingData_$fileIDq/indAAclassLDA/classAA_$refID"."_$t".".txt")||die "could not create AA time series file\n";
-   open(OUT2, ">"."./testingData_$fileIDq/indAAdrmsf/drmsfAA_$refID"."_$t".".txt")||die "could not create AA time series file\n"; 
-   open(IN, "<"."./testingData_$fileIDq/indAAclassLDAtemp/classAA_$fileIDq"."_$t".".txt")||die "could not open temp time series file\n";
-   open(IN2, "<"."./DROIDS_results_$queryID"."_$refID"."_flux_$cutoffValue/adjustKStests".".txt")||die "could not open adjustKStests.txt file\n";
-    my @IN = <IN>;
-    my @IN2 = <IN2>;
-    for (my $a = 0; $a < scalar @IN; $a++) {
-	$INrow = $IN[$a];
-     $nextINrow = $IN[$a+1];
-     $nextnextINrow = $IN[$a+2];
-     @INrow = split(/\s+/, $INrow);
-	@nextINrow = split(/\s+/, $nextINrow);
-     @nextnextINrow = split(/\s+/, $nextnextINrow);
-     $search = @INrow[0];
-     $classvalue = @nextINrow[1];
-     $dRMSF = @nextnextINrow[1];
-     for (my $aa = 0; $aa < scalar @IN2; $aa++) {
-        $IN2row = $IN2[$aa];
-        @IN2row = split(/\s+/, $IN2row);
-        $AApos = @IN2row[0];
-        $ns = @IN2row[5];
-        if ($AApos == $t && $search eq "Levels:" && $ns eq "ns" && $classvalue <= 1){print OUT "0\n";}
-        if ($AApos == $t && $search eq "Levels:" && $ns ne "ns" && $classvalue <= 1){print OUT "$classvalue\n"; print OUT2 "$dRMSF\n";}
-        }
-     }
-   close IN;
-   close IN2;
-   close OUT;
-   close OUT2;
- }
- }
- 
- if ($option eq "off"){  # no mask option applied
- for (my $t = 0; $t < $lengthID; $t++){
-   open(OUT, ">"."./testingData_$fileIDq/indAAclassLDA/classAA_$refID"."_$t".".txt")||die "could not create AA time series file\n";
-   open(OUT2, ">"."./testingData_$fileIDq/indAAdrmsf/drmsfAA_$refID"."_$t".".txt")||die "could not create AA time series file\n";
-   open(IN, "<"."./testingData_$fileIDq/indAAclassLDAtemp/classAA_$fileIDq"."_$t".".txt")||die "could not open temp time series file\n";
-    my @IN = <IN>;
-    for (my $a = 0; $a < scalar @IN; $a++) {
-	$INrow = $IN[$a];
-     $nextINrow = $IN[$a+1];
-     $nextnextINrow = $IN[$a+2];
-     @INrow = split(/\s+/, $INrow);
-	@nextINrow = split(/\s+/, $nextINrow);
-     @nextnextINrow = split(/\s+/, $nextnextINrow);
-     $search = @INrow[0];
-     $classvalue = @nextINrow[1];
-     $dRMSF = @nextnextINrow[1];
-     if ($search eq "Levels:" && $classvalue <= 1){print OUT "$classvalue\n"; print OUT2 "$dRMSF\n";} 
-     }
-   close IN;
-   close OUT;
-   close OUT2;
- } 
-     
- }
  
 }
 
 ############################################
 if ($method_dist == 1){
      print "running quadratic discriminant analysis classifier\n";
-     mkdir("./testingData_$fileIDq/indAAclassQDAtemp");     
- for (my $r = 0; $r<$lengthID; $r++){
+     mkdir("./testingData_$fileIDq/indAAclassQDA");
+  for (my $r = 1; $r<=$lengthID; $r++){
    print "\n\nQDA classifier learning residue $r on $fileIDq\n\n";
    sleep(1);
    open (Rinput, "| R --vanilla")||die "could not start R command line\n";
-   # load plotting libraries
+   # load libraries
    print Rinput "library(ggplot2)\n";
    print Rinput "library(class)\n";
    print Rinput "library(MASS)\n";
-   print Rinput "library(doParallel)\n";
    # read data into R
-   print Rinput "dataT = read.table('indAAtrain/fluxtimeAA_$refID"."_$r.txt', header = TRUE)\n";
-   print Rinput "dataD = read.table('testingData_$fileIDq/indAAtest/fluxtimeAA_$fileIDq"."_$r.txt', header = TRUE)\n";
+   print Rinput "dataT = read.table('trainingData/position$r', header = TRUE)\n";
+   print Rinput "dataD = read.table('testingData_$fileIDq/position$r', header = TRUE)\n";
    print Rinput "class <- dataT\$class\n"; # training class
-   $c1 = "dataT\$c1";
-   $c2 = "dataT\$c2";
-   $c3 = "dataT\$c3";
-   $c4 = "dataT\$c4";
-   $c5 = "dataT\$c5";
+   #print Rinput "print(dataD)\n";
    print Rinput "train <- dataT\n";
-   print Rinput "train <- train[-c(1)]\n";
+   print Rinput "train <- train[-c(1)]\n"; # drops class column
    print Rinput "test <- dataD\n";
-   #print Rinput "print(train)\n";
-   #print Rinput "print(test)\n";
-   print Rinput "my_bind <- vector()
-   classes <- vector()
-   for(i in 1:length(test)){
-     new <- class
-     my_bind = cbind(new, classes)
-     classes <- my_bind
-     }
-   classes <- as.data.frame(classes)
-   stack_class <- stack(classes)
-   names(stack_class)<-c(\"class\", \"slice\")
-   stack_class_slice = stack_class[,1, drop=FALSE]
-   stack_train <- stack(train)
-   names(stack_train)<-c(\"c1\", \"slice\")
-   stack_train_slice = stack_train[,1, drop=FALSE]\n";
-   print Rinput "sink('./testingData_$fileIDq/indAAclassQDAtemp/classAA_$fileIDq"."_$r.txt')\n";
-   print Rinput "numCores <- detectCores()\n";
-   print Rinput "print(numCores)\n";
-   #print Rinput "cl <- makeCluster(numCores, type='FORK')\n";  
-   print Rinput "registerDoParallel(numCores)\n";
-   #print Rinput "for(i in 1:length(test)){
-   print Rinput "foreach(i=1:length(test), .combine=rbind) %dopar% {
-   train_slice = stack_train_slice
-   class_slice = stack_class_slice
-   ref_train_slice <- train_slice[class == 0,]
-   test_slice <- test[,i, drop=FALSE]
-   names(test_slice)<-c(\"c1\")
-   mean_test_slice <- mean(test_slice[,1])
-   mean_ref_train_slice <- mean(ref_train_slice)
-   delta_rmsf = (mean_test_slice - mean_ref_train_slice)
-   ref_train_slice <- train_slice[class == 0,]
-   xy <- data.frame(class_slice, train_slice)
-   qda.xy   <- qda(as.factor(class)~., data=xy)
-   qda.pred <- predict(qda.xy,  as.data.frame(test_slice))\$class
-   myQDA1 <- as.numeric(qda.pred[1])
-   myQDA2 <- as.numeric(qda.pred[2])
-   myQDA3 <- as.numeric(qda.pred[3])
-   myQDA4 <- as.numeric(qda.pred[4])
-   my_avgQDA = (myQDA1+myQDA2+myQDA3+myQDA4)/4-1
-   if(my_avgQDA > 0.5){my_QDA = 1}
-   if(my_avgQDA < 0.5){my_QDA = 0}
-   if(my_avgQDA == 0.5){my_QDA = 0.5}
-   print (i)
-   print(qda.pred)
-   print(my_QDA)
-   print(delta_rmsf)
-   }\n";
+   print Rinput "test <- test[-c(1)]\n"; # drops class column
+   print Rinput "print(head(train))\n";
+   print Rinput "print(head(test))\n";
+   print Rinput "xy <- data.frame(class, train)\n";
+   print Rinput "qda.xy   <- qda(as.factor(class)~., data=xy)\n";
+   print Rinput "qda.pred <- predict(qda.xy, as.data.frame(test))\$class\n";
+   print Rinput "my_zero <- sum(qda.pred == 0)\n";
+   print Rinput "my_one <- sum(qda.pred == 1)\n";
+   print Rinput "my_freq <- my_zero/(my_zero + my_one)\n";
+   print Rinput "print(my_freq)\n";
+   print Rinput "mean_test <- mean(test[,1])\n";
+   print Rinput "mean_train <- mean(train[,1])\n";
+   print Rinput "delta_rmsf = (mean_test - mean_train)\n";
+   print Rinput "sink('./testingData_$fileIDq/indAAclassQDA/position"."_$r.txt')\n";
+   print Rinput "print(qda.pred)\n";
+   print Rinput "print(my_freq)\n";
+   print Rinput "print(delta_rmsf)\n";
    print Rinput "sink()\n";
    # write to output file and quit R
    print Rinput "q()\n";# quit R 
    print Rinput "n\n";# save workspace image?
    close Rinput;
-   }
-  
- mkdir("./testingData_$fileIDq/indAAclassQDA");
- mkdir("./testingData_$fileIDq/indAAdrmsf");
- if ($option eq "on"){  # apply mask...learn only where KS test is signif
- for (my $t = 0; $t < $lengthID; $t++){
-   open(OUT, ">"."./testingData_$fileIDq/indAAclassQDA/classAA_$refID"."_$t".".txt")||die "could not create AA time series file\n";
-   open(OUT2, ">"."./testingData_$fileIDq/indAAdrmsf/drmsfAA_$refID"."_$t".".txt")||die "could not create AA time series file\n"; 
-   open(IN, "<"."./testingData_$fileIDq/indAAclassQDAtemp/classAA_$fileIDq"."_$t".".txt")||die "could not open temp time series file\n";
-   open(IN2, "<"."./DROIDS_results_$queryID"."_$refID"."_flux_$cutoffValue/adjustKStests".".txt")||die "could not open adjustKStests.txt file\n";
-    my @IN = <IN>;
-    my @IN2 = <IN2>;
-    for (my $a = 0; $a < scalar @IN; $a++) {
-	$INrow = $IN[$a];
-     $nextINrow = $IN[$a+1];
-     $nextnextINrow = $IN[$a+2];
-     @INrow = split(/\s+/, $INrow);
-	@nextINrow = split(/\s+/, $nextINrow);
-     @nextnextINrow = split(/\s+/, $nextnextINrow);
-     $search = @INrow[0];
-     $classvalue = @nextINrow[1];
-     $dRMSF = @nextnextINrow[1];
-     for (my $aa = 0; $aa < scalar @IN2; $aa++) {
-        $IN2row = $IN2[$aa];
-        @IN2row = split(/\s+/, $IN2row);
-        $AApos = @IN2row[0];
-        $ns = @IN2row[5];
-        if ($AApos == $t && $search eq "Levels:" && $ns eq "ns" && $classvalue <= 1){print OUT "0\n";}
-        if ($AApos == $t && $search eq "Levels:" && $ns ne "ns" && $classvalue <= 1){print OUT "$classvalue\n"; print OUT2 "$dRMSF\n";}
-        }
-     }
-   close IN;
-   close IN2;
-   close OUT;
-   close OUT2;
- }
- }
- 
- if ($option eq "off"){  # no mask option applied
- for (my $t = 0; $t < $lengthID; $t++){
-   open(OUT, ">"."./testingData_$fileIDq/indAAclassQDA/classAA_$refID"."_$t".".txt")||die "could not create AA time series file\n";
-   open(OUT2, ">"."./testingData_$fileIDq/indAAdrmsf/drmsfAA_$refID"."_$t".".txt")||die "could not create AA time series file\n";
-   open(IN, "<"."./testingData_$fileIDq/indAAclassQDAtemp/classAA_$fileIDq"."_$t".".txt")||die "could not open temp time series file\n";
-    my @IN = <IN>;
-    for (my $a = 0; $a < scalar @IN; $a++) {
-	$INrow = $IN[$a];
-     $nextINrow = $IN[$a+1];
-     $nextnextINrow = $IN[$a+2];
-     @INrow = split(/\s+/, $INrow);
-	@nextINrow = split(/\s+/, $nextINrow);
-     @nextnextINrow = split(/\s+/, $nextnextINrow);
-     $search = @INrow[0];
-     $classvalue = @nextINrow[1];
-     $dRMSF = @nextnextINrow[1];
-     if ($search eq "Levels:" && $classvalue <= 1){print OUT "$classvalue\n"; print OUT2 "$dRMSF\n";} 
-     }
-   close IN;
-   close OUT;
-   close OUT2;
- } 
-     
- }
- 
+   }   
+
 }
 
 
 ############################################
 if ($method_kern == 1){
      print "running SVM classifier\n";
-     mkdir("./testingData_$fileIDq/indAAclassSVMtemp");
- for (my $p = 1; $p<=$framefactor; $p++){
-     $add = $p*$framegroups-$framegroups;
-     $total = $framefactor*$framegroups;
- for (my $r = 0; $r<$lengthID; $r++){
+     mkdir("./testingData_$fileIDq/indAAclassSVM");
+ for (my $r = 1; $r<=$lengthID; $r++){
    print "\n\nSVM classifier learning residue $r on $fileIDq\n\n";
    sleep(1);
    open (Rinput, "| R --vanilla")||die "could not start R command line\n";
-   # load plotting libraries
+   # load libraries
    print Rinput "library(ggplot2)\n";
    print Rinput "library(class)\n";
    print Rinput "library(kernlab)\n";
-   print Rinput "library(doParallel)\n";
    # read data into R
-   print Rinput "dataT = read.table('indAAtrain/fluxtimeAA_$refID"."_$r.txt', header = TRUE)\n";
-   print Rinput "dataD = read.table('testingData_$fileIDq/indAAtest/fluxtimeAA_$fileIDq"."_$r.txt', header = TRUE)\n";
+   print Rinput "dataT = read.table('trainingData/position$r', header = TRUE)\n";
+   print Rinput "dataD = read.table('testingData_$fileIDq/position$r', header = TRUE)\n";
    print Rinput "class <- dataT\$class\n"; # training class
-   $c1 = "dataT\$c1";
-   $c2 = "dataT\$c2";
-   $c3 = "dataT\$c3";
-   $c4 = "dataT\$c4";
-   $c5 = "dataT\$c5";
+   #print Rinput "print(dataD)\n";
    print Rinput "train <- dataT\n";
-   print Rinput "train <- train[-c(1)]\n";
+   print Rinput "train <- train[-c(1)]\n"; # drops class column
    print Rinput "test <- dataD\n";
-   #print Rinput "print(train)\n";
-   #print Rinput "print(test)\n";
-   #print Rinput "sink('./testingData_$fileIDq/indAAclassSVMtemp/classAA_$fileIDq"."_$r.txt')\n";
-   #print Rinput "print(test)\n";
-   # define subset of dataD to match size of dataT
-   if ($p > 1){
-   print Rinput "test <- test[,$add:$total]\n";
-   #print Rinput "print(test)\n";
-   print Rinput "for(i in 1:$framegroups){
-   names(test)[i]<-paste('X',i, sep='')
-   }\n";
-   #print Rinput "print(test)\n";
-   }
-   #print Rinput "train <- train[-c(1)]\n"; # drops class column
-   if ($p == 1){
-   print Rinput "sink('./testingData_$fileIDq/indAAclassSVMtemp/classAA_$fileIDq"."_$r.txt')\n";
-   }
-   if ($p > 1){
-   print Rinput "sink('./testingData_$fileIDq/indAAclassSVMtemp/classAA_$fileIDq"."_$r.txt', append = TRUE)\n";
-   }
-   print Rinput "numCores <- detectCores()\n";
-   print Rinput "print(numCores)\n";
-   #print Rinput "cl <- makeCluster(numCores, type='FORK')\n";  
-   print Rinput "registerDoParallel(numCores)\n";
-   #print Rinput "for(i in 1:length(train)){
-   print Rinput "foreach(i=1:length(train), .combine=rbind) %dopar% {
-      train_slice <- train[,i, drop=FALSE]
-   ref_train_slice <- train_slice[class == 0,]
-   test_slice <- test[,i, drop=FALSE]
-   mean_test_slice <- mean(test_slice[,1])
-   mean_ref_train_slice <- mean(ref_train_slice)
-   delta_rmsf = (mean_test_slice - mean_ref_train_slice)
-   xy <- data.frame(class, train_slice)
-   svm.xy   <- ksvm(as.factor(class)~., data=xy, kernel='$kerntype',C=2, cross=5)
-   svm.pred <- predict(svm.xy, as.data.frame(test_slice), type='response')
-   mySVM1 <- as.numeric(svm.pred[1])
-   mySVM2 <- as.numeric(svm.pred[2])
-   mySVM3 <- as.numeric(svm.pred[3])
-   mySVM4 <- as.numeric(svm.pred[4])
-   my_avgSVM = (mySVM1+mySVM2+mySVM3+mySVM4)/4-1
-   if(my_avgSVM > 0.5){my_SVM = 1}
-   if(my_avgSVM < 0.5){my_SVM = 0}
-   if(my_avgSVM == 0.5){my_SVM = 0.5}
-   print (i)
-   print(svm.pred)
-   print(my_SVM)
-   print(delta_rmsf)
-   }\n";
-   #print Rinput "stopCluster(cl)\n";
+   print Rinput "test <- test[-c(1)]\n"; # drops class column
+   print Rinput "print(head(train))\n";
+   print Rinput "print(head(test))\n";
+   print Rinput "xy <- data.frame(class, train)\n";
+   print Rinput "svm.xy   <- ksvm(as.factor(class)~., data=xy, kernel='$kerntype',C=2, cross=5)\n";
+   print Rinput "svm.pred <- predict(svm.xy, as.data.frame(test), type='response')\n";
+   print Rinput "my_zero <- sum(svm.pred == 0)\n";
+   print Rinput "my_one <- sum(svm.pred == 1)\n";
+   print Rinput "my_freq <- my_zero/(my_zero + my_one)\n";
+   print Rinput "print(my_freq)\n";
+   print Rinput "mean_test <- mean(test[,1])\n";
+   print Rinput "mean_train <- mean(train[,1])\n";
+   print Rinput "delta_rmsf = (mean_test - mean_train)\n";
+   print Rinput "sink('./testingData_$fileIDq/indAAclassSVM/position"."_$r.txt')\n";
+   print Rinput "print(svm.pred)\n";
+   print Rinput "print(my_freq)\n";
+   print Rinput "print(delta_rmsf)\n";
    print Rinput "sink()\n";
    # write to output file and quit R
    print Rinput "q()\n";# quit R 
    print Rinput "n\n";# save workspace image?
    close Rinput;
-   }
- } # end iterations 
- mkdir("./testingData_$fileIDq/indAAclassSVM");
- mkdir("./testingData_$fileIDq/indAAdrmsf");
- if ($option eq "on"){  # apply mask...learn only where KS test is signif
- for (my $t = 0; $t < $lengthID; $t++){
-   open(OUT, ">"."./testingData_$fileIDq/indAAclassSVM/classAA_$refID"."_$t".".txt")||die "could not create AA time series file\n";
-   open(OUT2, ">"."./testingData_$fileIDq/indAAdrmsf/drmsfAA_$refID"."_$t".".txt")||die "could not create AA time series file\n"; 
-   open(IN, "<"."./testingData_$fileIDq/indAAclassSVMtemp/classAA_$fileIDq"."_$t".".txt")||die "could not open temp time series file\n";
-   open(IN2, "<"."./DROIDS_results_$queryID"."_$refID"."_flux_$cutoffValue/adjustKStests".".txt")||die "could not open adjustKStests.txt file\n";
-    my @IN = <IN>;
-    my @IN2 = <IN2>;
-    for (my $a = 0; $a < scalar @IN; $a++) {
-	$INrow = $IN[$a];
-     $nextINrow = $IN[$a+1];
-     $nextnextINrow = $IN[$a+2];
-     @INrow = split(/\s+/, $INrow);
-	@nextINrow = split(/\s+/, $nextINrow);
-     @nextnextINrow = split(/\s+/, $nextnextINrow);
-     $search = @INrow[0];
-     $classvalue = @nextINrow[1];
-     $dRMSF = @nextnextINrow[1];
-     for (my $aa = 0; $aa < scalar @IN2; $aa++) {
-        $IN2row = $IN2[$aa];
-        @IN2row = split(/\s+/, $IN2row);
-        $AApos = @IN2row[0];
-        $ns = @IN2row[5];
-        if ($AApos == $t && $search eq "Levels:" && $ns eq "ns" && $classvalue <= 1){print OUT "0\n";}
-        if ($AApos == $t && $search eq "Levels:" && $ns ne "ns" && $classvalue <= 1){print OUT "$classvalue\n"; print OUT2 "$dRMSF\n";}
-        }
-     }
-   close IN;
-   close IN2;
-   close OUT;
-   close OUT2;
- }
- }
- 
- if ($option eq "off"){  # no mask option applied
- for (my $t = 0; $t < $lengthID; $t++){
-   open(OUT, ">"."./testingData_$fileIDq/indAAclassSVM/classAA_$refID"."_$t".".txt")||die "could not create AA time series file\n";
-   open(OUT2, ">"."./testingData_$fileIDq/indAAdrmsf/drmsfAA_$refID"."_$t".".txt")||die "could not create AA time series file\n";
-   open(IN, "<"."./testingData_$fileIDq/indAAclassSVMtemp/classAA_$fileIDq"."_$t".".txt")||die "could not open temp time series file\n";
-    my @IN = <IN>;
-    for (my $a = 0; $a < scalar @IN; $a++) {
-	$INrow = $IN[$a];
-     $nextINrow = $IN[$a+1];
-     $nextnextINrow = $IN[$a+2];
-     @INrow = split(/\s+/, $INrow);
-	@nextINrow = split(/\s+/, $nextINrow);
-     @nextnextINrow = split(/\s+/, $nextnextINrow);
-     $search = @INrow[0];
-     $classvalue = @nextINrow[1];
-     $dRMSF = @nextnextINrow[1];
-     if ($search eq "Levels:" && $classvalue <= 1){print OUT "$classvalue\n"; print OUT2 "$dRMSF\n";} 
-     }
-   close IN;
-   close OUT;
-   close OUT2;
- } 
-     
- }
- 
- 
+   } 
+
 }
 
 
 ###########################################
-if ($method_ens == 1){
+if ($method_ens == 1){     
     print "running random forest classifier\n";
-    mkdir("./testingData_$fileIDq/indAAclassRFORtemp");     
- for (my $p = 1; $p<=$framefactor; $p++){
-     $add = $p*$framegroups-$framegroups;
-     $total = $framefactor*$framegroups;
- for (my $r = 0; $r<$lengthID; $r++){
+    mkdir("./testingData_$fileIDq/indAAclassRFOR");     
+ for (my $r = 1; $r<=$lengthID; $r++){
    print "\n\nRFOR classifier learning residue $r on $fileIDq\n\n";
-   #sleep(1);
+   sleep(1);
    open (Rinput, "| R --vanilla")||die "could not start R command line\n";
-   # load plotting libraries
+   # load libraries
    print Rinput "library(ggplot2)\n";
    print Rinput "library(class)\n";
    print Rinput "library(randomForest)\n";
-   print Rinput "library(doParallel)\n";
    # read data into R
-   print Rinput "dataT = read.table('indAAtrain/fluxtimeAA_$refID"."_$r.txt', header = TRUE)\n";
-   print Rinput "dataD = read.table('testingData_$fileIDq/indAAtest/fluxtimeAA_$fileIDq"."_$r.txt', header = TRUE)\n";
-   print Rinput "class = dataT\$class\n"; # training class
-   $c1 = "dataT\$c1";
-   $c2 = "dataT\$c2";
-   $c3 = "dataT\$c3";
-   $c4 = "dataT\$c4";
-   $c5 = "dataT\$c5";
+   print Rinput "dataT = read.table('trainingData/position$r', header = TRUE)\n";
+   print Rinput "dataD = read.table('testingData_$fileIDq/position$r', header = TRUE)\n";
+   print Rinput "class <- dataT\$class\n"; # training class
+   #print Rinput "print(dataD)\n";
    print Rinput "train <- dataT\n";
-   print Rinput "train <- train[-c(1)]\n";
+   print Rinput "train <- train[-c(1)]\n"; # drops class column
    print Rinput "test <- dataD\n";
-   #print Rinput "sink('./testingData_$fileIDq/indAAclassRFORtemp/classAA_$fileIDq"."_$r.txt')\n";
-   #print Rinput "print(test)\n";
-   # define subset of dataD to match size of dataT
-   if ($p > 1){
-    print Rinput "test <- test[,$add:$total]\n";
-    #print Rinput "print(test)\n";
-    print Rinput "for(i in 1:$framegroups){
-    names(test)[i]<-paste('X',i, sep='')
-    }\n";
-    #print Rinput "print(test)\n";
-   }
-   #print Rinput "train <- train[-c(1)]\n"; # drops class column
-   if ($p == 1){
-   print Rinput "sink('./testingData_$fileIDq/indAAclassRFORtemp/classAA_$fileIDq"."_$r.txt')\n";
-   }
-   if ($p > 1){
-   print Rinput "sink('./testingData_$fileIDq/indAAclassRFORtemp/classAA_$fileIDq"."_$r.txt', append = TRUE)\n";
-   }
-   print Rinput "numCores <- detectCores()\n";
-   print Rinput "print(numCores)\n";
-   #print Rinput "cl <- makeCluster(numCores, type='FORK')\n";  
-   print Rinput "registerDoParallel(numCores)\n";
-   #print Rinput "for(i in 1:length(train)){
-   print Rinput "foreach(i=1:length(train), .combine=rbind) %dopar% {
-   train_slice <- train[,i, drop=FALSE]
-   ref_train_slice <- train_slice[class == 0,]
-   test_slice <- test[,i, drop=FALSE]
-   mean_test_slice <- mean(test_slice[,1])
-   mean_ref_train_slice <- mean(ref_train_slice)
-   delta_rmsf = (mean_test_slice - mean_ref_train_slice)
-   ref_train_slice <- train_slice[class == 0,]
-   xy <- data.frame(class, train_slice)
-   rf.xy <- randomForest(as.factor(class)~., data=xy, ntree=500)
-   rf.pred <- predict(rf.xy, as.data.frame(test_slice), type='response')
-   myRF1 <- as.numeric(rf.pred[1])
-   myRF2 <- as.numeric(rf.pred[2])
-   myRF3 <- as.numeric(rf.pred[3])
-   myRF4 <- as.numeric(rf.pred[4])
-   my_avgRF = (myRF1+myRF2+myRF3+myRF4)/4-1
-   if(my_avgRF > 0.5){my_RF = 1}
-   if(my_avgRF < 0.5){my_RF = 0}
-   if(my_avgRF == 0.5){my_RF = 0.5} 
-   print (i)
-   print(rf.pred)
-   print(my_RF)
-   print(delta_rmsf)
-   }\n";
-   #print Rinput "stopCluster(cl)\n";
+   print Rinput "test <- test[-c(1)]\n"; # drops class column
+   print Rinput "print(head(train))\n";
+   print Rinput "print(head(test))\n";
+   print Rinput "xy <- data.frame(class, train)\n";
+   print Rinput "rf.xy <- randomForest(as.factor(class)~., data=xy, ntree=500)\n";
+   print Rinput "rf.pred <- predict(rf.xy, as.data.frame(test), type='response')\n";
+   print Rinput "my_zero <- sum(rf.pred == 0)\n";
+   print Rinput "my_one <- sum(rf.pred == 1)\n";
+   print Rinput "my_freq <- my_zero/(my_zero + my_one)\n";
+   print Rinput "print(my_freq)\n";
+   print Rinput "mean_test <- mean(test[,1])\n";
+   print Rinput "mean_train <- mean(train[,1])\n";
+   print Rinput "delta_rmsf = (mean_test - mean_train)\n";
+   print Rinput "sink('./testingData_$fileIDq/indAAclassRFOR/position"."_$r.txt')\n";
+   print Rinput "print(rf.pred)\n";
+   print Rinput "print(my_freq)\n";
+   print Rinput "print(delta_rmsf)\n";
    print Rinput "sink()\n";
    # write to output file and quit R
    print Rinput "q()\n";# quit R 
    print Rinput "n\n";# save workspace image?
    close Rinput;
-   }
- } # end iterations 
- mkdir("./testingData_$fileIDq/indAAclassRFOR");
- mkdir("./testingData_$fileIDq/indAAdrmsf");
- if ($option eq "on"){  # apply mask...learn only where KS test is signif
- for (my $t = 0; $t < $lengthID; $t++){
-   open(OUT, ">"."./testingData_$fileIDq/indAAclassRFOR/classAA_$refID"."_$t".".txt")||die "could not create AA time series file\n";
-   open(OUT2, ">"."./testingData_$fileIDq/indAAdrmsf/drmsfAA_$refID"."_$t".".txt")||die "could not create AA time series file\n"; 
-   open(IN, "<"."./testingData_$fileIDq/indAAclassRFORtemp/classAA_$fileIDq"."_$t".".txt")||die "could not open temp time series file\n";
-   open(IN2, "<"."./DROIDS_results_$queryID"."_$refID"."_flux_$cutoffValue/adjustKStests".".txt")||die "could not open adjustKStests.txt file\n";
-    my @IN = <IN>;
-    my @IN2 = <IN2>;
-    for (my $a = 0; $a < scalar @IN; $a++) {
-	$INrow = $IN[$a];
-     $nextINrow = $IN[$a+1];
-     $nextnextINrow = $IN[$a+2];
-     @INrow = split(/\s+/, $INrow);
-	@nextINrow = split(/\s+/, $nextINrow);
-     @nextnextINrow = split(/\s+/, $nextnextINrow);
-     $search = @INrow[0];
-     $classvalue = @nextINrow[1];
-     $dRMSF = @nextnextINrow[1];
-     for (my $aa = 0; $aa < scalar @IN2; $aa++) {
-        $IN2row = $IN2[$aa];
-        @IN2row = split(/\s+/, $IN2row);
-        $AApos = @IN2row[0];
-        $ns = @IN2row[5];
-        if ($AApos == $t && $search eq "Levels:" && $ns eq "ns" && $classvalue <= 1){print OUT "0\n";}
-        if ($AApos == $t && $search eq "Levels:" && $ns ne "ns" && $classvalue <= 1){print OUT "$classvalue\n"; print OUT2 "$dRMSF\n";}
-        }
-     }
-   close IN;
-   close IN2;
-   close OUT;
-   close OUT2;
- }
- }
- 
- if ($option eq "off"){  # no mask option applied
- for (my $t = 0; $t < $lengthID; $t++){
-   open(OUT, ">"."./testingData_$fileIDq/indAAclassRFOR/classAA_$refID"."_$t".".txt")||die "could not create AA time series file\n";
-   open(OUT2, ">"."./testingData_$fileIDq/indAAdrmsf/drmsfAA_$refID"."_$t".".txt")||die "could not create AA time series file\n";
-   open(IN, "<"."./testingData_$fileIDq/indAAclassRFORtemp/classAA_$fileIDq"."_$t".".txt")||die "could not open temp time series file\n";
-    my @IN = <IN>;
-    for (my $a = 0; $a < scalar @IN; $a++) {
-	$INrow = $IN[$a];
-     $nextINrow = $IN[$a+1];
-     $nextnextINrow = $IN[$a+2];
-     @INrow = split(/\s+/, $INrow);
-	@nextINrow = split(/\s+/, $nextINrow);
-     @nextnextINrow = split(/\s+/, $nextnextINrow);
-     $search = @INrow[0];
-     $classvalue = @nextINrow[1];
-     $dRMSF = @nextnextINrow[1];
-     if ($search eq "Levels:" && $classvalue <= 1){print OUT "$classvalue\n"; print OUT2 "$dRMSF\n";} 
-     }
-   close IN;
-   close OUT;
-   close OUT2;
- } 
-     
- }
-     
+   } 
+    
 }
 
 
 ###########################################
 if ($method_ens == 1){
     print "running adaptive boosting classifier\n";
-    mkdir("./testingData_$fileIDq/indAAclassADAtemp");     
- for (my $p = 1; $p<=$framefactor; $p++){
-     $add = $p*$framegroups-$framegroups;
-     $total = $framefactor*$framegroups;
- for (my $r = 0; $r<$lengthID; $r++){
+    mkdir("./testingData_$fileIDq/indAAclassADA");     
+ for (my $r = 1; $r<=$lengthID; $r++){
    print "\n\nADA classifier learning residue $r on $fileIDq\n\n";
    sleep(1);
    open (Rinput, "| R --vanilla")||die "could not start R command line\n";
-   # load plotting libraries
+   # load libraries
    print Rinput "library(ggplot2)\n";
    print Rinput "library(class)\n";
    print Rinput "library(ada)\n";
-   print Rinput "library(doParallel)\n";
    # read data into R
-   print Rinput "dataT = read.table('indAAtrain/fluxtimeAA_$refID"."_$r.txt', header = TRUE)\n";
-   print Rinput "dataD = read.table('testingData_$fileIDq/indAAtest/fluxtimeAA_$fileIDq"."_$r.txt', header = TRUE)\n";
-   print Rinput "class = dataT\$class\n"; # training class
-   $c1 = "dataT\$c1";
-   $c2 = "dataT\$c2";
-   $c3 = "dataT\$c3";
-   $c4 = "dataT\$c4";
-   $c5 = "dataT\$c5";
+   print Rinput "dataT = read.table('trainingData/position$r', header = TRUE)\n";
+   print Rinput "dataD = read.table('testingData_$fileIDq/position$r', header = TRUE)\n";
+   print Rinput "class <- dataT\$class\n"; # training class
+   #print Rinput "print(dataD)\n";
    print Rinput "train <- dataT\n";
-   print Rinput "train <- train[-c(1)]\n";
+   print Rinput "train <- train[-c(1)]\n"; # drops class column
    print Rinput "test <- dataD\n";
-   #print Rinput "sink('./testingData_$fileIDq/indAAclassADAtemp/classAA_$fileIDq"."_$r.txt')\n";
-   #print Rinput "print(test)\n";
-   # define subset of dataD to match size of dataT
-   if ($p > 1){
-    print Rinput "test <- test[,$add:$total]\n";
-    #print Rinput "print(test)\n";
-    print Rinput "for(i in 1:$framegroups){
-    names(test)[i]<-paste('X',i, sep='')
-    }\n";
-    #print Rinput "print(test)\n";
-   }
-   #print Rinput "train <- train[-c(1)]\n"; # drops class column
-   if ($p == 1){
-   print Rinput "sink('./testingData_$fileIDq/indAAclassADAtemp/classAA_$fileIDq"."_$r.txt')\n";
-   }
-   if ($p > 1){
-   print Rinput "sink('./testingData_$fileIDq/indAAclassADAtemp/classAA_$fileIDq"."_$r.txt', append = TRUE)\n";
-   }
-   print Rinput "numCores <- detectCores()\n";
-   print Rinput "print(numCores)\n";
-   #print Rinput "cl <- makeCluster(numCores, type='FORK')\n";  
-   print Rinput "registerDoParallel(numCores)\n";
-   #print Rinput "for(i in 1:length(train)){
-   print Rinput "foreach(i=1:length(train), .combine=rbind) %dopar% {
-   train_slice <- train[,i, drop=FALSE]
-   ref_train_slice <- train_slice[class == 0,]
-   test_slice <- test[,i, drop=FALSE]
-   mean_test_slice <- mean(test_slice[,1])
-   mean_ref_train_slice <- mean(ref_train_slice)
-   delta_rmsf = (mean_test_slice - mean_ref_train_slice)
-   ref_train_slice <- train_slice[class == 0,]
-   xy <- data.frame(class, train_slice)
-   boost.xy <- ada(as.factor(class)~., data=xy, 18)
-   boost.pred <- predict(boost.xy, as.data.frame(test_slice), type='vector')
-   myBOOST1 <- as.numeric(boost.pred[1])
-   myBOOST2 <- as.numeric(boost.pred[2])
-   myBOOST3 <- as.numeric(boost.pred[3])
-   myBOOST4 <- as.numeric(boost.pred[4])
-   my_avgBOOST = (myBOOST1+myBOOST2+myBOOST3+myBOOST4)/4-1
-   if(my_avgBOOST > 0.5){my_BOOST = 1}
-   if(my_avgBOOST < 0.5){my_BOOST = 0}
-   if(my_avgBOOST == 0.5){my_BOOST = 0.5}
-   print (i)
-   print(boost.pred)
-   print(my_BOOST)
-   print(delta_rmsf)
-   }\n";
-   
-  #print Rinput "stopCluster(cl)\n";
-  print Rinput "sink()\n";
-  # write to output file and quit R
-  print Rinput "q()\n";# quit R 
-  print Rinput "n\n";# save workspace image?
-  close Rinput;
-  }
- } # end iterations 
- mkdir("./testingData_$fileIDq/indAAclassADA");
- mkdir("./testingData_$fileIDq/indAAdrmsf");
- if ($option eq "on"){  # apply mask...learn only where KS test is signif
- for (my $t = 0; $t < $lengthID; $t++){
-   open(OUT, ">"."./testingData_$fileIDq/indAAclassADA/classAA_$refID"."_$t".".txt")||die "could not create AA time series file\n";
-   open(OUT2, ">"."./testingData_$fileIDq/indAAdrmsf/drmsfAA_$refID"."_$t".".txt")||die "could not create AA time series file\n"; 
-   open(IN, "<"."./testingData_$fileIDq/indAAclassADAtemp/classAA_$fileIDq"."_$t".".txt")||die "could not open temp time series file\n";
-   open(IN2, "<"."./DROIDS_results_$queryID"."_$refID"."_flux_$cutoffValue/adjustKStests".".txt")||die "could not open adjustKStests.txt file\n";
-    my @IN = <IN>;
-    my @IN2 = <IN2>;
-    for (my $a = 0; $a < scalar @IN; $a++) {
-	$INrow = $IN[$a];
-     $nextINrow = $IN[$a+1];
-     $nextnextINrow = $IN[$a+2];
-     @INrow = split(/\s+/, $INrow);
-	@nextINrow = split(/\s+/, $nextINrow);
-     @nextnextINrow = split(/\s+/, $nextnextINrow);
-     $search = @INrow[0];
-     $classvalue = @nextINrow[1];
-     $dRMSF = @nextnextINrow[1];
-     for (my $aa = 0; $aa < scalar @IN2; $aa++) {
-        $IN2row = $IN2[$aa];
-        @IN2row = split(/\s+/, $IN2row);
-        $AApos = @IN2row[0];
-        $ns = @IN2row[5];
-        if ($AApos == $t && $search eq "Levels:" && $ns eq "ns" && $classvalue <= 1){print OUT "0\n";}
-        if ($AApos == $t && $search eq "Levels:" && $ns ne "ns" && $classvalue <= 1){print OUT "$classvalue\n"; print OUT2 "$dRMSF\n";}
-        }
-     }
-   close IN;
-   close IN2;
-   close OUT;
-   close OUT2;
- }
- }
- 
- if ($option eq "off"){  # no mask option applied
- for (my $t = 0; $t < $lengthID; $t++){
-   open(OUT, ">"."./testingData_$fileIDq/indAAclassADA/classAA_$refID"."_$t".".txt")||die "could not create AA time series file\n";
-   open(OUT2, ">"."./testingData_$fileIDq/indAAdrmsf/drmsfAA_$refID"."_$t".".txt")||die "could not create AA time series file\n";
-   open(IN, "<"."./testingData_$fileIDq/indAAclassADAtemp/classAA_$fileIDq"."_$t".".txt")||die "could not open temp time series file\n";
-    my @IN = <IN>;
-    for (my $a = 0; $a < scalar @IN; $a++) {
-	$INrow = $IN[$a];
-     $nextINrow = $IN[$a+1];
-     $nextnextINrow = $IN[$a+2];
-     @INrow = split(/\s+/, $INrow);
-	@nextINrow = split(/\s+/, $nextINrow);
-     @nextnextINrow = split(/\s+/, $nextnextINrow);
-     $search = @INrow[0];
-     $classvalue = @nextINrow[1];
-     $dRMSF = @nextnextINrow[1];
-     if ($search eq "Levels:" && $classvalue <= 1){print OUT "$classvalue\n"; print OUT2 "$dRMSF\n";} 
-     }
-   close IN;
-   close OUT;
-   close OUT2;
- } 
-     
- }
-     
+   print Rinput "test <- test[-c(1)]\n"; # drops class column
+   print Rinput "print(head(train))\n";
+   print Rinput "print(head(test))\n";
+   print Rinput "xy <- data.frame(class, train)\n";
+   print Rinput "boost.xy <- ada(as.factor(class)~., data=xy, 18)\n";
+   print Rinput "boost.pred <- predict(boost.xy, as.data.frame(test), type='vector')\n";
+   print Rinput "my_zero <- sum(boost.pred == 0)\n";
+   print Rinput "my_one <- sum(boost.pred == 1)\n";
+   print Rinput "my_freq <- my_zero/(my_zero + my_one)\n";
+   print Rinput "print(my_freq)\n";
+   print Rinput "mean_test <- mean(test[,1])\n";
+   print Rinput "mean_train <- mean(train[,1])\n";
+   print Rinput "delta_rmsf = (mean_test - mean_train)\n";
+   print Rinput "sink('./testingData_$fileIDq/indAAclassADA/position"."_$r.txt')\n";
+   print Rinput "print(boost.pred)\n";
+   print Rinput "print(my_freq)\n";
+   print Rinput "print(delta_rmsf)\n";
+   print Rinput "sink()\n";
+   # write to output file and quit R
+   print Rinput "q()\n";# quit R 
+   print Rinput "n\n";# save workspace image?
+   close Rinput;
+   } 
+    
 }
 
 
@@ -1257,173 +576,192 @@ copy($oldfilename, $newfilename);
 ##### make R Plots
 if ($method_bnp == 1){
 # KNN method
-open (OUT, ">"."./testingData_$fileIDq/classpositionHISTOknn.txt\n");
-print OUT "position\t"."sum\n";
-for (my $r = 0; $r<$lengthID; $r++){
+open (OUT, ">"."./maxDemon_results/classpositionHISTOknn_$fileIDq.txt\n");
+print OUT "position\t"."sum\t"."dRMSF\n";
+for (my $r = 1; $r<=$lengthID; $r++){
    $AApos = $r;
-   @class_values = ();
-   open (IN, "<"."./testingData_$fileIDq/indAAclassKNN/classAA_$refID"."_$r.txt");
+   $freqML = 0.5;
+   open (IN, "<"."./testingData_$fileIDq/indAAclassKNN/position_$r.txt");
    my @IN = <IN>;
    for (my $i = 0; $i < scalar @IN; $i++) {
       $INrow = $IN[$i];
       @INrow = split(/\s+/, $INrow);
-      $class_value = @INrow[0];
-      if ($class_value == 0 ||$class_value == 0.5 || $class_value == 1){push(@class_values, $class_value);}
+      $search = @INrow[0];
+      $INrowNext = $IN[$i+1];
+      @INrowNext = split(/\s+/, $INrowNext);
+      $value1 = @INrowNext[1];
+      $INrowNextNext = $IN[$i+2];
+      @INrowNextNext = split(/\s+/, $INrowNextNext);
+      $value2 = @INrowNextNext[1];
+      if ($search eq "Levels:"){$freqML = $value1; $dRMSF = $value2;}
       }
       close IN;
-      $statSCORE = new Statistics::Descriptive::Full; # residue avg flux - reference
-      $statSCORE->add_data (@class_values);
-	 $sum_class = $statSCORE->mean();
-      if ($AApos ne '' && $sum_class ne ''){print OUT "$AApos\t"."$sum_class\n";}
+      if ($AApos ne ''){print OUT "$AApos\t"."$freqML\t"."$dRMSF\n";}
 }
 close OUT;
 }
 
 if ($method_dist == 1){  # this is permanently disabled (replicates QDA)
 # NB method
-open (OUT, ">"."./testingData_$fileIDq/classpositionHISTOnb.txt\n");
-print OUT "position\t"."sum\n";
-for (my $r = 0; $r<$lengthID; $r++){
+open (OUT, ">"."./maxDemon_results/classpositionHISTOnb_$fileIDq.txt\n");
+print OUT "position\t"."sum\t"."dRMSF\n";
+for (my $r = 1; $r<=$lengthID; $r++){
    $AApos = $r;
-   @class_values = ();
-   open (IN, "<"."./testingData_$fileIDq/indAAclassNB/classAA_$refID"."_$r.txt");
+   $freqML = 0.5;
+   open (IN, "<"."./testingData_$fileIDq/indAAclassNB/position_$r.txt");
    my @IN = <IN>;
    for (my $i = 0; $i < scalar @IN; $i++) {
       $INrow = $IN[$i];
       @INrow = split(/\s+/, $INrow);
-      $class_value = @INrow[0];
-      if ($class_value == 0 ||$class_value == 0.5 || $class_value == 1){push(@class_values, $class_value);}
+      $search = @INrow[0];
+      $INrowNext = $IN[$i+1];
+      @INrowNext = split(/\s+/, $INrowNext);
+      $value1 = @INrowNext[1];
+      $INrowNextNext = $IN[$i+2];
+      @INrowNextNext = split(/\s+/, $INrowNextNext);
+      $value2 = @INrowNextNext[1];
+      if ($search eq "Levels:"){$freqML = $value1; $dRMSF = $value2;}
       }
       close IN;
-      $statSCORE = new Statistics::Descriptive::Full; # residue avg flux - reference
-      $statSCORE->add_data (@class_values);
-	 $sum_class = $statSCORE->mean();
-      if ($AApos ne '' && $sum_class ne ''){print OUT "$AApos\t"."$sum_class\n";}
+      if ($AApos ne ''){print OUT "$AApos\t"."$freqML\t"."$dRMSF\n";}
 }
 close OUT;
 }
 
 if ($method_dist == 1){
 # LDA method
-open (OUT, ">"."./testingData_$fileIDq/classpositionHISTOlda.txt\n");
-print OUT "position\t"."sum\n";
-for (my $r = 0; $r<$lengthID; $r++){
+open (OUT, ">"."./maxDemon_results/classpositionHISTOlda_$fileIDq.txt\n");
+print OUT "position\t"."sum\t"."dRMSF\n";
+for (my $r = 1; $r<=$lengthID; $r++){
    $AApos = $r;
-   @class_values = ();
-   open (IN, "<"."./testingData_$fileIDq/indAAclassLDA/classAA_$refID"."_$r.txt");
+   $freqML = 0.5;
+   open (IN, "<"."./testingData_$fileIDq/indAAclassLDA/position_$r.txt");
    my @IN = <IN>;
    for (my $i = 0; $i < scalar @IN; $i++) {
       $INrow = $IN[$i];
       @INrow = split(/\s+/, $INrow);
-      $class_value = @INrow[0];
-      if ($class_value == 0 ||$class_value == 0.5 || $class_value == 1){push(@class_values, $class_value);}
+      $search = @INrow[0];
+      $INrowNext = $IN[$i+1];
+      @INrowNext = split(/\s+/, $INrowNext);
+      $value1 = @INrowNext[1];
+      $INrowNextNext = $IN[$i+2];
+      @INrowNextNext = split(/\s+/, $INrowNextNext);
+      $value2 = @INrowNextNext[1];
+      if ($search eq "Levels:"){$freqML = $value1; $dRMSF = $value2;}
       }
       close IN;
-      $statSCORE = new Statistics::Descriptive::Full; # residue avg flux - reference
-      $statSCORE->add_data (@class_values);
-	 $sum_class = $statSCORE->mean();
-      if ($AApos ne '' && $sum_class ne ''){print OUT "$AApos\t"."$sum_class\n";}
+      if ($AApos ne ''){print OUT "$AApos\t"."$freqML\t"."$dRMSF\n";}
 }
 close OUT;
 }
 
 if ($method_dist == 1){
 # QDA method
-open (OUT, ">"."./testingData_$fileIDq/classpositionHISTOqda.txt\n");
-print OUT "position\t"."sum\n";
-for (my $r = 0; $r<$lengthID; $r++){
+open (OUT, ">"."./maxDemon_results/classpositionHISTOqda_$fileIDq.txt\n");
+print OUT "position\t"."sum\t"."dRMSF\n";
+for (my $r = 1; $r<=$lengthID; $r++){
    $AApos = $r;
-   @class_values = ();
-   open (IN, "<"."./testingData_$fileIDq/indAAclassQDA/classAA_$refID"."_$r.txt");
+   $freqML = 0.5;
+   open (IN, "<"."./testingData_$fileIDq/indAAclassQDA/position_$r.txt");
    my @IN = <IN>;
    for (my $i = 0; $i < scalar @IN; $i++) {
       $INrow = $IN[$i];
       @INrow = split(/\s+/, $INrow);
-      $class_value = @INrow[0];
-      if ($class_value == 0 ||$class_value == 0.5 || $class_value == 1){push(@class_values, $class_value);}
+      $search = @INrow[0];
+      $INrowNext = $IN[$i+1];
+      @INrowNext = split(/\s+/, $INrowNext);
+      $value1 = @INrowNext[1];
+      $INrowNextNext = $IN[$i+2];
+      @INrowNextNext = split(/\s+/, $INrowNextNext);
+      $value2 = @INrowNextNext[1];
+      if ($search eq "Levels:"){$freqML = $value1; $dRMSF = $value2;}
       }
       close IN;
-      $statSCORE = new Statistics::Descriptive::Full; # residue avg flux - reference
-      $statSCORE->add_data (@class_values);
-	 $sum_class = $statSCORE->mean();
-      if ($AApos ne '' && $sum_class ne ''){print OUT "$AApos\t"."$sum_class\n";}
+      if ($AApos ne ''){print OUT "$AApos\t"."$freqML\t"."$dRMSF\n";}
 }
 close OUT;
 }
 
 if ($method_kern == 1){
 # SVM method
-open (OUT, ">"."./testingData_$fileIDq/classpositionHISTOsvm.txt\n");
-print OUT "position\t"."sum\n";
-for (my $r = 0; $r<$lengthID; $r++){
+open (OUT, ">"."./maxDemon_results/classpositionHISTOsvm_$fileIDq.txt\n");
+print OUT "position\t"."sum\t"."dRMSF\n";
+for (my $r = 1; $r<=$lengthID; $r++){
    $AApos = $r;
-   @class_values = ();
-   open (IN, "<"."./testingData_$fileIDq/indAAclassSVM/classAA_$refID"."_$r.txt");
+   $freqML = 0.5;
+   open (IN, "<"."./testingData_$fileIDq/indAAclassSVM/position_$r.txt");
    my @IN = <IN>;
    for (my $i = 0; $i < scalar @IN; $i++) {
       $INrow = $IN[$i];
       @INrow = split(/\s+/, $INrow);
-      $class_value = @INrow[0];
-      if ($class_value == 0 ||$class_value == 0.5 || $class_value == 1){push(@class_values, $class_value);}
+      $search = @INrow[0];
+      $INrowNext = $IN[$i+1];
+      @INrowNext = split(/\s+/, $INrowNext);
+      $value1 = @INrowNext[1];
+      $INrowNextNext = $IN[$i+2];
+      @INrowNextNext = split(/\s+/, $INrowNextNext);
+      $value2 = @INrowNextNext[1];
+      if ($search eq "Levels:"){$freqML = $value1; $dRMSF = $value2;}
       }
       close IN;
-      $statSCORE = new Statistics::Descriptive::Full; # residue avg flux - reference
-      $statSCORE->add_data (@class_values);
-	 $sum_class = $statSCORE->mean();
-      if ($AApos ne '' && $sum_class ne ''){print OUT "$AApos\t"."$sum_class\n";}
+      if ($AApos ne ''){print OUT "$AApos\t"."$freqML\t"."$dRMSF\n";}
 }
 close OUT;
 }
 
-
-if ($method_ens == 1){
+if ($method_ens == 1){ 
 # RANDOM FOREST method
-open (OUT, ">"."./testingData_$fileIDq/classpositionHISTOrfor.txt\n");
-print OUT "position\t"."sum\n";
-for (my $r = 0; $r<$lengthID; $r++){
+open (OUT, ">"."./maxDemon_results/classpositionHISTOrfor_$fileIDq.txt\n");
+print OUT "position\t"."sum\t"."dRMSF\n";
+for (my $r = 1; $r<=$lengthID; $r++){
    $AApos = $r;
-   @class_values = ();
-   open (IN, "<"."./testingData_$fileIDq/indAAclassRFOR/classAA_$refID"."_$r.txt");
+   $freqML = 0.5;
+   open (IN, "<"."./testingData_$fileIDq/indAAclassRFOR/position_$r.txt");
    my @IN = <IN>;
    for (my $i = 0; $i < scalar @IN; $i++) {
       $INrow = $IN[$i];
       @INrow = split(/\s+/, $INrow);
-      $class_value = @INrow[0];
-      if ($class_value == 0 ||$class_value == 0.5 || $class_value == 1){push(@class_values, $class_value);}
+      $search = @INrow[0];
+      $INrowNext = $IN[$i+1];
+      @INrowNext = split(/\s+/, $INrowNext);
+      $value1 = @INrowNext[1];
+      $INrowNextNext = $IN[$i+2];
+      @INrowNextNext = split(/\s+/, $INrowNextNext);
+      $value2 = @INrowNextNext[1];
+      if ($search eq "Levels:"){$freqML = $value1; $dRMSF = $value2;}
       }
       close IN;
-      $statSCORE = new Statistics::Descriptive::Full; # residue avg flux - reference
-      $statSCORE->add_data (@class_values);
-	 $sum_class = $statSCORE->mean();
-      if ($AApos ne '' && $sum_class ne ''){print OUT "$AApos\t"."$sum_class\n";}
+      if ($AApos ne ''){print OUT "$AApos\t"."$freqML\t"."$dRMSF\n";}
 }
 close OUT;
 }
 
 if ($method_ens == 1){
 # ADABOOST method
-open (OUT, ">"."./testingData_$fileIDq/classpositionHISTOada.txt\n");
-print OUT "position\t"."sum\n";
-for (my $r = 0; $r<$lengthID; $r++){
+open (OUT, ">"."./maxDemon_results/classpositionHISTOada_$fileIDq.txt\n");
+print OUT "position\t"."sum\t"."dRMSF\n";
+for (my $r = 1; $r<=$lengthID; $r++){
    $AApos = $r;
-   @class_values = ();
-   open (IN, "<"."./testingData_$fileIDq/indAAclassADA/classAA_$refID"."_$r.txt");
+   $freqML = 0.5;
+   open (IN, "<"."./testingData_$fileIDq/indAAclassADA/position_$r.txt");
    my @IN = <IN>;
    for (my $i = 0; $i < scalar @IN; $i++) {
       $INrow = $IN[$i];
       @INrow = split(/\s+/, $INrow);
-      $class_value = @INrow[0];
-      if ($class_value == 0 ||$class_value == 0.5 || $class_value == 1){push(@class_values, $class_value);}
+      $search = @INrow[0];
+      $INrowNext = $IN[$i+1];
+      @INrowNext = split(/\s+/, $INrowNext);
+      $value1 = @INrowNext[1];
+      $INrowNextNext = $IN[$i+2];
+      @INrowNextNext = split(/\s+/, $INrowNextNext);
+      $value2 = @INrowNextNext[1];
+      if ($search eq "Levels:"){$freqML = $value1; $dRMSF = $value2;}
       }
       close IN;
-      $statSCORE = new Statistics::Descriptive::Full; # residue avg flux - reference
-      $statSCORE->add_data (@class_values);
-	 $sum_class = $statSCORE->mean();
-      if ($AApos ne '' && $sum_class ne ''){print OUT "$AApos\t"."$sum_class\n";}
+      if ($AApos ne ''){print OUT "$AApos\t"."$freqML\t"."$dRMSF\n";}
 }
 close OUT;
 }
-
 #####################################################
 sleep(1);
 print " plotting class position histogram and flux profiles\n\n";
@@ -1437,39 +775,46 @@ print Rinput "library(gridExtra)\n";
 
 # read data into R
 # KNN
-print Rinput "datatableKNN = read.table('./testingData_$fileIDq/classpositionHISTOknn.txt', header = TRUE)\n"; 
+print Rinput "datatableKNN = read.table('./maxDemon_results/classpositionHISTOknn_$fileIDq.txt', header = TRUE)\n"; 
 $AAposition_knn = "datatableKNN\$position"; # AA position
 $sum_classifiers_knn = "datatableKNN\$sum"; # sum of classifiers
+$dRMSF_knn = "datatableKNN\$dRMSF"; # avg dRMSF
 print Rinput "dataframeKNN = data.frame(pos1=$AAposition_knn, Y1val=$sum_classifiers_knn)\n";
 # naive Bayes
-print Rinput "datatableNB = read.table('./testingData_$fileIDq/classpositionHISTOnb.txt', header = TRUE)\n"; 
+print Rinput "datatableNB = read.table('./maxDemon_results/classpositionHISTOnb_$fileIDq.txt', header = TRUE)\n"; 
 $AAposition_nb = "datatableNB\$position"; # AA position
 $sum_classifiers_nb = "datatableNB\$sum"; # sum of classifiers
+$dRMSF_nb = "datatableNB\$dRMSF"; # avg dRMSF
 print Rinput "dataframeNB = data.frame(pos1=$AAposition_nb, Y1val=$sum_classifiers_nb)\n";
 # LDA
-print Rinput "datatableLDA = read.table('./testingData_$fileIDq/classpositionHISTOlda.txt', header = TRUE)\n"; 
+print Rinput "datatableLDA = read.table('./maxDemon_results/classpositionHISTOlda_$fileIDq.txt', header = TRUE)\n"; 
 $AAposition_lda = "datatableLDA\$position"; # AA position
 $sum_classifiers_lda = "datatableLDA\$sum"; # sum of classifiers
+$dRMSF_lda = "datatableLDA\$dRMSF"; # avg dRMSF
 print Rinput "dataframeLDA = data.frame(pos1=$AAposition_lda, Y1val=$sum_classifiers_lda)\n";
 # QDA
-print Rinput "datatableQDA = read.table('./testingData_$fileIDq/classpositionHISTOqda.txt', header = TRUE)\n"; 
+print Rinput "datatableQDA = read.table('./maxDemon_results/classpositionHISTOqda_$fileIDq.txt', header = TRUE)\n"; 
 $AAposition_qda = "datatableQDA\$position"; # AA position
 $sum_classifiers_qda = "datatableQDA\$sum"; # sum of classifiers
+$dRMSF_qda = "datatableQDA\$dRMSF"; # avg dRMSF
 print Rinput "dataframeQDA = data.frame(pos1=$AAposition_qda, Y1val=$sum_classifiers_qda)\n";
 # SVM
-print Rinput "datatableSVM = read.table('./testingData_$fileIDq/classpositionHISTOsvm.txt', header = TRUE)\n"; 
+print Rinput "datatableSVM = read.table('./maxDemon_results/classpositionHISTOsvm_$fileIDq.txt', header = TRUE)\n"; 
 $AAposition_svm = "datatableSVM\$position"; # AA position
 $sum_classifiers_svm = "datatableSVM\$sum"; # sum of classifiers
+$dRMSF_svm = "datatableSVM\$dRMSF"; # avg dRMSF
 print Rinput "dataframeSVM = data.frame(pos1=$AAposition_svm, Y1val=$sum_classifiers_svm)\n";
 # random forest
-print Rinput "datatableRFOR = read.table('./testingData_$fileIDq/classpositionHISTOrfor.txt', header = TRUE)\n"; 
+print Rinput "datatableRFOR = read.table('./maxDemon_results/classpositionHISTOrfor_$fileIDq.txt', header = TRUE)\n"; 
 $AAposition_rfor = "datatableRFOR\$position"; # AA position
 $sum_classifiers_rfor = "datatableRFOR\$sum"; # sum of classifiers
+$dRMSF_rfor = "datatableRFOR\$dRMSF"; # avg dRMSF
 print Rinput "dataframeRFOR = data.frame(pos1=$AAposition_rfor, Y1val=$sum_classifiers_rfor)\n";
 # adaboost
-print Rinput "datatableADA = read.table('./testingData_$fileIDq/classpositionHISTOada.txt', header = TRUE)\n"; 
+print Rinput "datatableADA = read.table('./maxDemon_results/classpositionHISTOada_$fileIDq.txt', header = TRUE)\n"; 
 $AAposition_ada = "datatableADA\$position"; # AA position
 $sum_classifiers_ada = "datatableADA\$sum"; # sum of classifiers
+$dRMSF_ada = "datatableADA\$dRMSF"; # avg dRMSF
 print Rinput "dataframeADA = data.frame(pos1=$AAposition_ada, Y1val=$sum_classifiers_ada)\n";
 # atom flux profiles
 print Rinput "datatable2 = read.table('./testingData_$fileIDq/DROIDSfluctuationAVGchain.txt', header = TRUE)\n"; 
@@ -1497,7 +842,7 @@ print "\n\n";
 print " copying plot\n\n";
 sleep(1);
 my $oldfilename = "Rplots.pdf";
-my $newfilename = "./testingData_$fileIDq/learningPLOT.pdf";
+my $newfilename = "./maxDemon_results/fluxOnly_learningPLOT_$fileIDq.pdf";
 copy($oldfilename, $newfilename);	
 print " machine learning is complete\n\n";
 
@@ -1520,7 +865,7 @@ for (my $p = 0; $p < scalar @MUT; $p++){
       print " open PDF file for $fileIDq\n\n";
       sleep(2);
       print " close PDF viewer to continue\n\n";
-      system "evince ./testingData_$fileIDq/learningPLOT.pdf\n";
+      system "evince ./maxDemon_results/fluxOnly_learningPLOT_$fileIDq.pdf\n";
       } #end for loop
 close MUT;
 

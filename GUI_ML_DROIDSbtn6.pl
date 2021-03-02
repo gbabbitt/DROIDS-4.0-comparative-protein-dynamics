@@ -179,11 +179,32 @@ for (my $i = 0; $i < scalar @IN; $i++) {
 close IN;
 close OUT;
 
+# transpose classifications to vertical format flat file
+for (my $n = 1; $n <= $lengthID; $n++) {
+   open(IN, "<"."./testingData_$queryID/indAAclass$learner/position_$n.txt")||die "could not open time series file /testingData_$queryID/indAAclass$learner/position_$i.txt\n";
+   open(OUT, ">"."./testingData_$queryID/indAAclass$learner/vertposition_$n.txt")||die "could not open time series file /testingData_$queryID/indAAclass$learner/vertposition_$i.txt\n";
+   my @IN = <IN>;  
+   for (my $i = 0; $i < scalar @IN; $i++) {
+	$INrow = $IN[$i];
+     @INrow = split(/] /, $INrow);
+	$trunINrow = $INrow[1];
+     #print OUT "$trunINrow";
+     @trunINrow = split(/\s+/, $trunINrow);
+     for (my $ii = 0; $ii < scalar(@trunINrow); $ii++){
+     $value = $trunINrow[$ii];
+     if($value == 0 || $value == 1){print OUT "$value\n";}
+     }
+     }
+   
+   close IN;
+   close OUT;
+   }
+
 # make learned class attribute files for movie rendering
 print "\n creating class attribute files for all frames\n";
 #if($stype eq "protprot"){open(IN, "<"."./testingData_$refID/indAAclass$learner/classAA_$refID"."_1".".txt")||die "could not open time series file /testingData_$refID/indAAclass$learner/classAA_$refID"."_1".".txt\n";}
 #if($stype ne "protprot"){open(IN, "<"."./testingData_$queryID/indAAclass$learner/classAA_$refID"."_1".".txt")||die "could not open time series file /testingData_$queryID/indAAclass$learner/classAA_$refID"."_1".".txt\n";}
-open(IN, "<"."./testingData_$queryID/indAAclass$learner/classAA_$refID"."_1".".txt")||die "could not open time series file /testingData_$queryID/indAAclass$learner/classAA_$refID"."_1".".txt\n";
+open(IN, "<"."./testingData_$queryID/indAAclass$learner/position_1.txt")||die "could not open time series file /testingData_$queryID/indAAclass$learner/position_1.txt\n";
 my @IN = <IN>;
 $fgroups = scalar @IN;
 close IN;
@@ -199,13 +220,13 @@ for (my $f = 1; $f <= $fgroups; $f++){
    if ($a eq '' || $a <= $offset){next;}
    open(IN, "<"."./testingData_$queryID/adj_vertpvals_$queryID.txt")||die "could not open mask file /testingData_$queryID/adj_vertpvals_$queryID.txt\n";  
     my @IN = <IN>;
-   $rowINDEX = $a-$offset-1;
+   $rowINDEX = $a-$offset;
    $INrow = $IN[$a-$offset];
     @INrow = split(/\s+/, $INrow);
     $maskvalue = $INrow[0];
    #if($stype eq "protprot"){open(IN2, "<"."./testingData_$refID/indAAclass$learner/classAA_$refID"."_$a".".txt")||die "could not open time series file  /testingData_$refID/indAAclass$learner/classAA_$refID"."_$a".".txt\n";}
    #if($stype ne "protprot"){open(IN2, "<"."./testingData_$queryID/indAAclass$learner/classAA_$refID"."_$a".".txt")||die "could not open time series file  /testingData_$queryID/indAAclass$learner/classAA_$refID"."_$a".".txt\n";}
-   open(IN2, "<"."./testingData_$queryID/indAAclass$learner/classAA_$refID"."_$rowINDEX".".txt")||die "could not open time series file  /testingData_$queryID/indAAclass$learner/classAA_$refID"."_$a".".txt\n";
+   open(IN2, "<"."./testingData_$queryID/indAAclass$learner/vertposition_$rowINDEX".".txt")||die "could not open time series file  /testingData_$queryID/indAAclass$learner/position_$a".".txt\n";
     my @IN2 = <IN2>;
     $frame = 0;
     for (my $i = 0; $i < scalar @IN2; $i++) {

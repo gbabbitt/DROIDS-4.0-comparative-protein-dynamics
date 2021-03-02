@@ -489,7 +489,7 @@ print ctlFile3 "average crdset MyAvg\n";
 print ctlFile3 "run\n";
 print ctlFile3 "rms ref MyAvg\n";
 print ctlFile3 "atomicfluct out fluct_$fileIDq"."_$i.txt \@CA,C,O,N,H&!(:WAT)\n";
-if($vector_enter eq 'y'){print ctlFile3 "atomiccorr \@CA,C,O,N&!(:WAT) out corrALL_$fileIDq"."_$i.txt\n";}
+#if($vector_enter eq 'y'){print ctlFile3 "atomiccorr \@CA,C,O,N&!(:WAT) out corrALL_$fileIDq"."_$i.txt\n";}
 #print ctlFile3 "byatom\n"; # hash out for avg atom flux, unhash for total atom flux
 print ctlFile3 "run\n";
 close ctlFile3;
@@ -505,7 +505,7 @@ print ctlFile4 "average crdset MyAvg\n";
 print ctlFile4 "run\n";
 print ctlFile4 "rms ref MyAvg\n";
 print ctlFile4 "atomicfluct out fluct_$fileIDr"."_$i.txt \@CA,C,O,N,H&!(:WAT)\n";
-if($vector_enter eq 'y'){print ctlFile4 "atomiccorr \@CA,C,O,N&!(:WAT) out corrALL_$fileIDr"."_$i.txt\n";}
+#if($vector_enter eq 'y'){print ctlFile4 "atomiccorr \@CA,C,O,N&!(:WAT) out corrALL_$fileIDr"."_$i.txt\n";}
 #print ctlFile4 "byatom\n";  # hash out for avg atom flux, unhash for total atom flux
 print ctlFile4 "run\n";
 close ctlFile4;
@@ -742,7 +742,7 @@ system("cpptraj "."-i ./atomflux_$fileIDq"."_$i.ctl | tee cpptraj_atomflux_$file
 system("cpptraj "."-i ./atomflux_$fileIDr"."_$i.ctl | tee cpptraj_atomflux_$fileIDr.txt");
 
 # parse atom corr files for reference into averages for neighbors at four distance ranges
-if($vector_enter eq 'y'){
+=if($vector_enter eq 'y'){
   
     print "parsing atomcorr for corrALL_$fileIDr"."_$i.txt\n";
     # create ouput file 1 (1 residue distance)
@@ -850,6 +850,7 @@ if($vector_enter eq 'y'){
     close OUT3;
     close OUT4;
    }
+=cut
 
 }
 }
@@ -1387,7 +1388,7 @@ sleep(1);
 print "chain lengths added to DROIDSfluctuationAVGchain.txt file\n\n";
 
 ################################################################################################
-if ($vector_enter eq 'y'){
+=if ($vector_enter eq 'y'){
 # parse atomcorr folder output to mirror atomflux folder output
 mkdir ("atomcorr") or die "please delete atomcorr folder from previous run\n";
 print "parsing atom corr data\n";
@@ -1510,6 +1511,7 @@ for (my $i = 0; $i < scalar @IN1; $i++){
 }
 close IN1;
 }
+=cut
 
 #############################################
 system "perl GUI_STATS_DROIDSdp1.pl\n";	

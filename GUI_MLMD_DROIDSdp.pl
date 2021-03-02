@@ -312,11 +312,11 @@ my $infoButton = $mw -> Button(-text => "create atom info files",
 				-command => \&info
 				); # Creates a file button
 
-my $fluxButton = $mw -> Button(-text => "create atom fluctuation files", 
+my $fluxButton = $mw -> Button(-text => "create atom fluctuation/correlation files", 
 				-command => \&flux
 				); # Creates a file button
 
-my $doneButton = $mw -> Button(-text => "parse / prepare files atom fluctuation files", 
+my $doneButton = $mw -> Button(-text => "parse/prepare atom flux/corr files", 
 				-command => \&done
 				); # Creates a file button
 my $stopButton = $mw -> Button(-text => "exit back to machine learning", 
@@ -523,7 +523,7 @@ for (my $p = 0; $p < scalar @MUT; $p++){
 	# convert all times to femtosec
 	$cutoffValueHeatFS = $cutoffValueHeat*1000;
 	$cutoffValueEqFS = $cutoffValueEq*1000000;
-	$cutoffValueProdFS = $cutoffValueProd*1000;
+	$cutoffValueProdFS = $cutoffValueProd*1000000;
 
 $currentProdTime = $cutoffValueProdFS*$prodLen;
 
@@ -614,7 +614,7 @@ print ctlFile3 "average crdset MyAvg\n";
 print ctlFile3 "run\n";
 print ctlFile3 "rms ref MyAvg\n";
 print ctlFile3 "atomicfluct out fluct_$fileIDq"."_deploy.txt \@CA,C,O,N&!(:WAT)\n";
-if($vector_enter eq 'y'){print ctlFile3 "atomiccorr \@CA,C,O,N&!(:WAT) out corrALL_$fileIDq"."_deploy.txt\n";}
+#if($vector_enter eq 'y'){print ctlFile3 "atomiccorr \@CA,C,O,N&!(:WAT) out corrALL_$fileIDq"."_deploy.txt\n";}
 #print ctlFile3 "byatom\n"; # hash out for avg atom flux, unhash for total atom flux
 print ctlFile3 "run\n";
 close ctlFile3;
@@ -902,7 +902,7 @@ for (my $p = 0; $p < scalar @MUT; $p++){
       system("cpptraj "."-i ./atomflux_$fileIDq"."_deploy.ctl | tee cpptraj_atomflux_$fileIDq.txt");
       #system("cpptraj "."-i ./atomflux_$fileIDr"."_$i.ctl | tee cpptraj_atomflux_$fileIDr.txt");
       # parse atom corr files for query into averages for neighbors at four distance ranges
-if($vector_enter eq 'y'){
+=if($vector_enter eq 'y'){
   
     print "parsing atomcorr for corrALL_$fileIDq"."_deploy.txt\n";
     # create ouput file 1 (1 residue distance)
@@ -955,6 +955,7 @@ if($vector_enter eq 'y'){
     close OUT3;
     close OUT4;
    }
+=cut
 
 #  }
 
@@ -1552,30 +1553,141 @@ if($solvType eq "im"){$TOPfileQUERY = "vac_$fileIDq"."REDUCED.prmtop";}
 if($solvType eq "ex"){$TOPfileQUERY = "wat_$fileIDq"."REDUCED.prmtop";}
 
 # process .nc files on queryID
-mkdir ("testingData_$fileIDq") or die "please delete testing data folder from previous run\n";
+mkdir ("testingDataFLUX_$fileIDq") or die "please delete testing data folder from previous run\n";
 $TRAJfile = "prod_$fileIDq"."REDUCED_deploy.nc";
-$OUTfile = "./testingData_$fileIDq/fluxtime_$fileIDq"."_deploy.txt";
+$OUTfile = "fluxtime_$fileIDq"."_deploy.txt";
 $step = $stepsize;
 $steplimit = $frameCount;
 $start = 0;
 $stop = $stepsize;
 open (CPPTRAJ, "|"."cpptraj -p $TOPfileQUERY\n");
-print CPPTRAJ "trajin $TRAJfile\n";
+print CPPTRAJ "trajin $TRAJfile $start $steplimit\n";
 print CPPTRAJ "rms first\n";
 print CPPTRAJ "average crdset MyAvg\n";
 print CPPTRAJ "run\n";
 print CPPTRAJ "rms ref MyAvg\n";
 print CPPTRAJ "rms first average\n";
-print CPPTRAJ "atomicfluct out $OUTfile \@CA,C,N,O,H&!(:WAT) start $start stop $steplimit\n";
+print CPPTRAJ "atomicfluct out $OUTfile \@CA,C,N,O,H&!(:WAT) byres\n";
 print CPPTRAJ "run\n";
+print CPPTRAJ "quit\n";
+close CPPTRAJ;
 for(my $i = 0; $i<$steplimit/$step; $i++){
-print CPPTRAJ "atomicfluct out $OUTfile \@CA,C,N,O,H&!(:WAT) start $start stop $stop\n";
+$OUTfile2 = "./testingDataFLUX_$fileIDq/fluxtime_$fileIDq"."_deploy_frames_$start"."-$stop.txt";
+open (CPPTRAJ, "|"."cpptraj -p $TOPfileQUERY\n");
+print CPPTRAJ "trajin $TRAJfile $start $stop\n";
+print CPPTRAJ "atomicfluct out $OUTfile2 \@CA,C,N,O,H&!(:WAT) byres\n";
 print CPPTRAJ "run\n";
+print CPPTRAJ "quit\n";
+close CPPTRAJ;
 $start = $start + $step;
 $stop = $stop + $step;
 }
+
+# loop through .nc files on refID
+mkdir ("testingDataCORR_$fileIDq"."_ALLPAIRS") or die "please delete testing data folder from previous run\n";
+$TRAJfile = "prod_$fileIDq"."REDUCED_deploy.nc";
+$OUTfile = "corrtime_$fileIDq"."_deploy.txt";
+$step = $stepsize;
+$steplimit = $frameCount;
+$start = 0;
+$stop = $stepsize;
+open (CTL, ">"."MDframes.ctl") || die "could not create frames ctl file\n";
+print CTL "framenumber\t"."$steplimit\n";
+print CTL "framestep\t"."$stepsize\n";
+$frameGroups = $steplimit/$stepsize;
+print CTL "framegroups\t"."$frameGroups\n";
+close CTL;
+open (CPPTRAJ, "|"."cpptraj -p $TOPfileQUERY\n");
+print CPPTRAJ "trajin $TRAJfile $start $steplimit\n";
+print CPPTRAJ "rms first\n";
+print CPPTRAJ "average crdset MyAvg\n";
+print CPPTRAJ "run\n";
+print CPPTRAJ "rms ref MyAvg\n";
+print CPPTRAJ "rms first average\n";
+print CPPTRAJ "atomiccorr out $OUTfile \@CA,C,N,O,H&!(:WAT) byres\n";
+print CPPTRAJ "run\n";
 print CPPTRAJ "quit\n";
 close CPPTRAJ;
+for(my $i = 0; $i<$steplimit/$step; $i++){
+$OUTfile2 = "./testingDataCORR_$fileIDq"."_ALLPAIRS/corrtime_$fileIDq"."_deploy_frames_$start"."-$stop.txt";
+open (CPPTRAJ, "|"."cpptraj -p $TOPfileQUERY\n");
+print CPPTRAJ "trajin $TRAJfile $start $stop\n";
+print CPPTRAJ "atomiccorr out $OUTfile2 \@CA,C,N,O,H&!(:WAT) byres\n";
+print CPPTRAJ "run\n";
+print CPPTRAJ "quit\n";
+close CPPTRAJ;
+$start = $start + $step;
+$stop = $stop + $step;
+}
+
+
+# parsing correlations at 1, 3, 5, and 9 positions distant  QUERY SEQUENCES
+mkdir ("testingDataCORR_$fileIDq"."_1res") or die "please delete testing data folder from previous run\n";
+mkdir ("testingDataCORR_$fileIDq"."_3res") or die "please delete testing data folder from previous run\n";
+mkdir ("testingDataCORR_$fileIDq"."_5res") or die "please delete testing data folder from previous run\n";
+mkdir ("testingDataCORR_$fileIDq"."_9res") or die "please delete testing data folder from previous run\n";
+
+$dir = "testingDataCORR_$fileIDq"."_ALLPAIRS";
+opendir(DIR,$dir)or die "can't open directory $dir:$!";
+print"\n";
+print "files in $dir are:\n";
+ 
+while ($filename = readdir DIR){
+ 
+    print "parsing correlations for $filename\n";
+    # create ouput file 1 (1 residue distance)
+    open (OUT1, ">"."./testingDataCORR_$fileIDq"."_1res/$filename"); 
+    print OUT1 "Atom Atom ACorr_00005\n";
+    # create ouput file 2 (3 residue distance)
+    open (OUT2, ">"."./testingDataCORR_$fileIDq"."_3res/$filename");
+    print OUT2 "Atom Atom ACorr_00005\n";
+    # create ouput file 3 (5 residue distance)
+    open (OUT3, ">"."./testingDataCORR_$fileIDq"."_5res/$filename");
+    print OUT3 "Atom Atom ACorr_00005\n";
+    # create ouput file 4 (10 residue distance)
+    open (OUT4, ">"."./testingDataCORR_$fileIDq"."_9res/$filename");
+    print OUT4 "Atom Atom ACorr_00005\n";
+    # initiate 3 arrays
+    #open each corrALL file
+    open (IN, "<"."./testingDataCORR_$fileIDq"."_ALLPAIRS/$filename");
+    my @IN = <IN>;
+    for (my $i = 0; $i < scalar @IN; $i++){
+	 my $INrow = $IN[$i];
+      my $INrow1 = $IN[$i+1];
+      my $INrow3 = $IN[$i+3];
+      my $INrow5 = $IN[$i+5];
+      my $INrow9 = $IN[$i+9];
+	 my @INrow = split (/\s+/, $INrow);
+      my @INrow1 = split (/\s+/, $INrow1);
+      my @INrow3 = split (/\s+/, $INrow3);
+      my @INrow5 = split (/\s+/, $INrow5);
+      my @INrow9 = split (/\s+/, $INrow9);
+	 $resnumber1 = @INrow[1];
+	 $resnumber2 = @INrow[2];
+      $rescorr = @INrow[3];
+      $rescorr1 = @INrow1[3];
+      $rescorr3 = @INrow3[3];
+      $rescorr5 = @INrow5[3];
+      $rescorr9 = @INrow9[3];
+      if ($rescorr1 eq ''){$rescorr1 = 0.0000;}
+      if ($rescorr3 eq ''){$rescorr3 = 0.0000;}
+      if ($rescorr5 eq ''){$rescorr5 = 0.0000;}
+      if ($rescorr9 eq ''){$rescorr9 = 0.0000;}
+      #print "$resnumber1\t"."$resnumber2\t"."$rescorr\t"."$rescorr1\t"."$rescorr3\t"."$rescorr5\t"."$rescorr9\n";
+      if ($rescorr == 0.0000 && $resnumber1 eq $resnumber2){print OUT1 "$resnumber1\t"."$resnumber2\t"."$rescorr1\n"}
+      if ($rescorr == 0.0000 && $resnumber1 eq $resnumber2){print OUT2 "$resnumber1\t"."$resnumber2\t"."$rescorr3\n"}
+      if ($rescorr == 0.0000 && $resnumber1 eq $resnumber2){print OUT3 "$resnumber1\t"."$resnumber2\t"."$rescorr5\n"}
+      if ($rescorr == 0.0000 && $resnumber1 eq $resnumber2){print OUT4 "$resnumber1\t"."$resnumber2\t"."$rescorr9\n"}
+       }
+    close IN;   
+    close OUT1;
+    close OUT2;
+    close OUT3;
+    close OUT4;
+
+ }
+
+goto SKIP;
 
 
 sleep(1); print("time series file created\n\n"); sleep(1);
@@ -1770,7 +1882,7 @@ for (my $t = 0; $t < $lengthID; $t++){
       close OUT;
       }
 
-
+SKIP:
 ############################################
 print("\nparsing is done\n");
 

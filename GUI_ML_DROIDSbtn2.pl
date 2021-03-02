@@ -6,7 +6,7 @@
 #use strict;
 #use warnings;
 #use feature ":5.10";
-#use File::Copy;
+use File::Copy;
 #use File::Path;
 #use List::Util qw( min );
 #use List::Util qw( max );
@@ -114,138 +114,485 @@ close IN2;
 #print("CTL file made\n");
 #sleep(1);
 ##############################
-mkdir("indAAtrain");
-#mkdir("./trainingData_$queryID/indAA");
+
+## training set
+mkdir("indAAtrain_flux");
 print("\nparsing training set time series for fluctuation data for each amino acid in $refID...\n");
 sleep(1);
- for (my $t = 0; $t < $lengthID; $t++){
-   open(OUT, ">"."./indAAtrain/fluxtimeAA_$refID"."_$t".".txt")||die "could not create AA time series file\n";
-   for (my $tt = 0; $tt < $number_runs; $tt++){
-    open(IN, "<"."./trainingData_$refID/fluxtime_$refID"."_$tt".".txt")||die "could not open time series file "."fluxtime_$refID"."_$tt.txt\n";
-    my @IN = <IN>;
-    for (my $a = 0; $a < scalar @IN; $a++) {
-	$INrow = $IN[$a];
-     $DATAseries = substr($INrow, 28, length($INrow) - 28);  # to remove atomID and overall avg
-     @INrow = split(/\s+/, $INrow);
-	$aaID = int($a/4 - 0.1);
-     $atomID = @INrow[1];
-	$overallAVG = @INrow[2];
-     if ($a == 0){  # create headers for file
-          @DATAseries = split(/\s+/, $DATAseries);
-          $framelistlength = scalar @DATAseries;
-          $framelist = '';
-          $frame = 0;
-          for (my $aa = 0; $aa < $framelistlength; $aa++){$frame = $frame +1; $framelist = "$framelist"."$frame\t";}
-          if ($tt == 0){print OUT "class\t"."$framelist\n";}
-          next;}
-     if ($aaID == $t){print OUT "0\t".$DATAseries;} #print "$tt\t"."$aaID\t"."$atomID\t"."$overallAVG\n";}
-     }
-   close IN;
-  }
-   close OUT;
-   
- }
-
+move("./trainingDataFLUX_$refID","./indAAtrain_flux/trainingDataFLUX_$refID"); 
 print("\nparsing training set time series for fluctuation data for each amino acid in $queryID...\n");
 sleep(1);
- for (my $t = 0; $t < $lengthID; $t++){
-   open(OUT, ">>"."./indAAtrain/fluxtimeAA_$refID"."_$t".".txt")||die "could not create AA time series file\n";
-   for (my $tt = 0; $tt < $number_runs; $tt++){
-    open(IN, "<"."./trainingData_$queryID/fluxtime_$queryID"."_$tt".".txt")||die "could not open time series file "."fluxtime_$queryID"."_$tt.txt\n";
-    my @IN = <IN>;
-    for (my $a = 0; $a < scalar @IN; $a++) {
-	$INrow = $IN[$a];
-     $DATAseries = substr($INrow, 28, length($INrow) - 28); # to remove atomID and overall avg
-     @INrow = split(/\s+/, $INrow);
-	$aaID = int($a/4 - 0.1);
-     $atomID = @INrow[1];
-	$overallAVG = @INrow[2];
-     if($atomID eq "AtomicFlx"){next;} # skip header row if encountered
-     if ($aaID == $t){print OUT "1\t".$DATAseries;} #print "$tt\t"."$aaID\t"."$atomID\t"."$overallAVG\n";}
-     }
-   close IN;
-  }
-  close OUT; 
- }
+move("./trainingDataFLUX_$queryID","./indAAtrain_flux/trainingDataFLUX_$queryID"); 
+## testing set
+mkdir("indAAtest_flux");
+for (my $g = 0; $g < 2; $g++){
+if ($g == 0) {open(MUT, "<"."copy_list.txt");}
+if ($g == 1) {open(MUT, "<"."variant_list.txt");}
+my @MUT = <MUT>;
+#print @MUT;
+for (my $p = 0; $p < scalar @MUT; $p++){
+	 if ($p == 0){next;}
+      my $MUTrow = $MUT[$p];
+      if ($g == 1 && $p == 1){next;}
+      if ($g == 1 && $p == 2){next;}
+      my @MUTrow = split (/\s+/, $MUTrow);
+	 $fileIDq = $MUTrow[0];
+      print("\nparsing testing set time series for fluctuation data for each amino acid in $fileIDq...\n");
+      sleep(1);
+      move("./testingDataFLUX_$fileIDq","./indAAtest_flux/testingDataFLUX_$fileIDq"); 
+close MUT;
+} #end for loop
+} # end outer for loop
 
-###########################################
-###########################################
-
+####################################
 if ($vector_enter eq 'y'){
-
+## training set
 mkdir("indAAtrain_corr");
-
+mkdir("trash");
 print("\nparsing training set time series for correlation data for each amino acid in $refID...\n");
 sleep(1);
- for (my $t = 0; $t < $lengthID; $t++){
-  #if($t == 0){next;}
-  $tt = $t+1;
-  open(OUT, ">"."./indAAtrain_corr/corrtimeAA_$refID"."_$t".".txt")||die "could not create AA time series file\n";
-  #print OUT "corr1\t"."corr3\t"."corr5\t"."corr9\n";
-  $corrlabel1 = $framegroups + 1;
-  $corrlabel3 = $framegroups + 2;
-  $corrlabel5 = $framegroups + 3;
-  $corrlabel9 = $framegroups + 4;
-  print OUT "$corrlabel1\t"."$corrlabel3\t"."$corrlabel5\t"."$corrlabel9\n";
-  open(IN, "<"."./atomcorr/DROIDScorrelation"."_$tt".".txt")||die "could not open corr file "."DROIDScorrelation"."_$t".".txt\n";
-    my @IN = <IN>;   
-    for (my $a = 0; $a < scalar @IN; $a++) {
-	$INrow = $IN[$a];
-     @INrow = split(/\s+/, $INrow);
-	$sample = @INrow[0];
-     $ref_corr1 = @INrow[8]; $ref_corr3 = @INrow[10]; $ref_corr5 = @INrow[12]; $ref_corr9 = @INrow[14];
-     if ($sample =~ /\d/) {print OUT "$ref_corr1\t"."$ref_corr3\t"."$ref_corr5\t"."$ref_corr9\n";}
-     }
-     close IN;
-     close OUT; 
-     }
-
+move("./trainingDataCORR_$refID"."_1res","./indAAtrain_corr/trainingDataCORR_$refID"."_1res"); 
+move("./trainingDataCORR_$refID"."_3res","./indAAtrain_corr/trainingDataCORR_$refID"."_3res");
+move("./trainingDataCORR_$refID"."_5res","./indAAtrain_corr/trainingDataCORR_$refID"."_5res");
+move("./trainingDataCORR_$refID"."_9res","./indAAtrain_corr/trainingDataCORR_$refID"."_9res");
+move("./trainingDataCORR_$refID"."_ALLPAIRS","./trash/trainingDataCORR_$refID"."_ALLPAIRS");
 print("\nparsing training set time series for correlation data for each amino acid in $queryID...\n");
 sleep(1); 
- 
-for (my $t = 0; $t < $lengthID; $t++){
-  #if($t == 0){next;}
-  $tt = $t+1;
-  open(OUT, ">>"."./indAAtrain_corr/corrtimeAA_$refID"."_$t".".txt")||die "could not create AA time series file\n";
-  open(IN, "<"."./atomcorr/DROIDScorrelation"."_$tt".".txt")||die "could not open corr file "."DROIDScorrelation"."_$t".".txt\n";
-    my @IN = <IN>;   
-    for (my $a = 0; $a < scalar @IN; $a++) {
-	$INrow = $IN[$a];
-     @INrow = split(/\s+/, $INrow);
-	$sample = @INrow[0];
-     $query_corr1 = @INrow[9]; $query_corr3 = @INrow[11]; $query_corr5 = @INrow[13]; $query_corr9 = @INrow[15];
-     if ($sample =~ /\d/) {print OUT "$query_corr1\t"."$query_corr3\t"."$query_corr5\t"."$query_corr9\n";}
-     }
-     close IN;
-     close OUT; 
-     }
-
+move("./trainingDataCORR_$queryID"."_1res","./indAAtrain_corr/trainingDataCORR_$queryID"."_1res"); 
+move("./trainingDataCORR_$queryID"."_3res","./indAAtrain_corr/trainingDataCORR_$queryID"."_3res");
+move("./trainingDataCORR_$queryID"."_5res","./indAAtrain_corr/trainingDataCORR_$queryID"."_5res");
+move("./trainingDataCORR_$queryID"."_9res","./indAAtrain_corr/trainingDataCORR_$queryID"."_9res");
+move("./trainingDataCORR_$queryID"."_ALLPAIRS","./trash/trainingDataCORR_$queryID"."_ALLPAIRS");
+## testing set
+mkdir("indAAtest_corr");
+for (my $g = 0; $g < 2; $g++){
+if ($g == 0) {open(MUT, "<"."copy_list.txt");}
+if ($g == 1) {open(MUT, "<"."variant_list.txt");}
+my @MUT = <MUT>;
+#print @MUT;
+for (my $p = 0; $p < scalar @MUT; $p++){
+	 if ($p == 0){next;}
+      my $MUTrow = $MUT[$p];
+      if ($g == 1 && $p == 1){next;}
+      if ($g == 1 && $p == 2){next;}
+      my @MUTrow = split (/\s+/, $MUTrow);
+	 $fileIDq = $MUTrow[0];
+      print("\nparsing testing set time series for correlation data for each amino acid in $fileIDq...\n");
+      sleep(1);
+      move("./testingDataCORR_$fileIDq"."_1res","./indAAtest_corr/testingDataCORR_$fileIDq"."_1res"); 
+      move("./testingDataCORR_$fileIDq"."_3res","./indAAtest_corr/testingDataCORR_$fileIDq"."_3res");
+      move("./testingDataCORR_$fileIDq"."_5res","./indAAtest_corr/testingDataCORR_$fileIDq"."_5res");
+      move("./testingDataCORR_$fileIDq"."_9res","./indAAtest_corr/testingDataCORR_$fileIDq"."_9res");
+      move("./testingDataCORR_$fileIDq"."_ALLPAIRS","./trash/testingDataCORR_$fileIDq"."_ALLPAIRS"); 
+close MUT;
+} #end for loop
+} # end outer for loop
      
-mkdir("indAAtrain_flux+corr");
-print "\n\ncombining atom fluctuation and atom correlation information\n\n";
-sleep(1);
-
-for (my $t = 0; $t < $lengthID; $t++){
-  open(OUT, ">"."./indAAtrain_flux+corr/fluxcorrAA_$refID"."_$t".".txt")||die "could not create AA time series file\n";
-  open(IN1, "<"."./indAAtrain/fluxtimeAA_$refID"."_$t".".txt")||die "could not open flux file "."fluxtimeAA_$refID"."_$t".".txt\n";
-  open(IN2, "<"."./indAAtrain_corr/corrtimeAA_$refID"."_$t".".txt")||die "could not open corr file "."corrtimeAA_$refID"."_$t".".txt\n";
-  my @IN1 = <IN1>;
-  my @IN2 = <IN2>;
-  for (my $a = 0; $a < scalar @IN1; $a++) {
-	 $IN1row = $IN1[$a];
-      $IN2row = $IN2[$a];
-      chomp $IN1row;
-      chomp $IN2row;
-      if($IN2row == ''){$IN2row = "0.5\t"."0.5\t"."0.5\t"."0.5\t";} # avg if array is empty
-      if($a == 0){print OUT "$IN1row"."$IN2row\n";}
-      if($a != 0){print OUT "$IN1row\t"."$IN2row\n";}
-      }
-      close IN1;
-      close IN2;
-      close OUT;
-      }
 } # end if statement
 ############################################
+
+# create final training data sets
+ print("\nbuilding final training/testing data sets for machine learning\n");
+      sleep(1);
+
+#####################################################################
+#####################################################################
+if ($vector_enter ne 'y'){ # build data sets with local fluctuations (within 5 AA site window) only
+mkdir("trainingData");     
+
+# collecting reference training data
+for (my $i = 0; $i <= $lengthID; $i++){
+print "collecting position $i for $refID\n";
+open (OUT, ">"."./trainingData/"."position$i") || die " could not open output file\n";
+print OUT "class\t"."flux0\t"."flux0\t"."flux3\t"."flux5\t"."flux9\n";
+$class = 0;
+$dir = "./indAAtrain_flux/trainingDataFLUX_$refID"."/";
+opendir(DIR,$dir)or die "can't open directory $dir:$!";
+while ($filename = readdir DIR){ # loop through files
+    $filecount = $filecount + 1;
+    $filelocation = "$dir"."$filename";
+    open(IN, $filelocation) or die "Cannot open file";
+    my @IN = <IN>;
+    for (my $j = 0; $j < scalar @IN; $j++){
+	 my $INrow = $IN[$j];
+      my $INrow1 = $IN[$j+1];
+      my $INrow3 = $IN[$j+3];
+      my $INrow5 = $IN[$j+5];
+      my $INrow9 = $IN[$j+9];
+	 my @INrow = split (/\s+/, $INrow);
+      my @INrow1 = split (/\s+/, $INrow1);
+      my @INrow3 = split (/\s+/, $INrow3);
+      my @INrow5 = split (/\s+/, $INrow5);
+      my @INrow9 = split (/\s+/, $INrow9);
+        $pos = $INrow[1];
+        $flux = $INrow[2];
+        $pos1 = $INrow1[1];
+        $flux1 = $INrow1[2];
+        $pos3 = $INrow3[1];
+        $flux3 = $INrow3[2];
+        $pos5 = $INrow5[1];
+        $flux5 = $INrow5[2];
+        $pos9 = $INrow9[1];
+        $flux9 = $INrow9[2];
+        #print "pos=$pos\t"."flux=$flux\t"."pos1=$pos1\t"."flux1=$flux1\t"."pos3=$pos3\t"."flux3=$flux3\t"."pos5=$pos5\t"."flux5=$flux5\t"."pos9=$pos9\t"."flux9=$flux9\n";
+        if($pos == $i){print OUT "$class\t"."$flux\t"."$flux1\t"."$flux3\t"."$flux5\t"."$flux9\n";}
+    } # end for
+    close IN;
+} # end while
+close DIR;
+close OUT;
+} # end for
+# collecting query training data
+for (my $i = 0; $i <= $lengthID; $i++){
+print "collecting position $i for $queryID\n";
+open (OUT, ">>"."./trainingData/"."position$i") || die " could not open output file\n";
+$class = 1;
+$dir = "./indAAtrain_flux/trainingDataFLUX_$queryID"."/";
+opendir(DIR,$dir)or die "can't open directory $dir:$!";
+while ($filename = readdir DIR){ # loop through files
+    $filecount = $filecount + 1;
+    $filelocation = "$dir"."$filename";
+    open(IN, $filelocation) or die "Cannot open file";
+    my @IN = <IN>;
+    for (my $j = 0; $j < scalar @IN; $j++){
+	 my $INrow = $IN[$j];
+      my $INrow1 = $IN[$j+1];
+      my $INrow3 = $IN[$j+3];
+      my $INrow5 = $IN[$j+5];
+      my $INrow9 = $IN[$j+9];
+	 my @INrow = split (/\s+/, $INrow);
+      my @INrow1 = split (/\s+/, $INrow1);
+      my @INrow3 = split (/\s+/, $INrow3);
+      my @INrow5 = split (/\s+/, $INrow5);
+      my @INrow9 = split (/\s+/, $INrow9);
+        $pos = $INrow[1];
+        $flux = $INrow[2];
+        $pos1 = $INrow1[1];
+        $flux1 = $INrow1[2];
+        $pos3 = $INrow3[1];
+        $flux3 = $INrow3[2];
+        $pos5 = $INrow5[1];
+        $flux5 = $INrow5[2];
+        $pos9 = $INrow9[1];
+        $flux9 = $INrow9[2];
+        #print "pos=$pos\t"."flux=$flux\t"."pos1=$pos1\t"."flux1=$flux1\t"."pos3=$pos3\t"."flux3=$flux3\t"."pos5=$pos5\t"."flux5=$flux5\t"."pos9=$pos9\t"."flux9=$flux9\n";
+        if($pos == $i){print OUT "$class\t"."$flux\t"."$flux1\t"."$flux3\t"."$flux5\t"."$flux9\n";}
+    } # end for
+    close IN;
+} # end while
+close DIR;
+close OUT;
+} # end for
+
+# collecting testing data
+for (my $g = 0; $g < 2; $g++){
+if ($g == 0) {open(MUT, "<"."copy_list.txt");}
+if ($g == 1) {open(MUT, "<"."variant_list.txt");}
+my @MUT = <MUT>;
+#print @MUT;
+for (my $p = 0; $p < scalar @MUT; $p++){
+	 if ($p == 0){next;}
+      my $MUTrow = $MUT[$p];
+      if ($g == 1 && $p == 1){next;}
+      if ($g == 1 && $p == 2){next;}
+      my @MUTrow = split (/\s+/, $MUTrow);
+	 $fileIDq = $MUTrow[0];
+      mkdir("testingData_$fileIDq");
+      for (my $i = 0; $i <= $lengthID; $i++){
+      print "collecting position $i for $fileIDq\n";
+      open (OUT, ">"."./testingData_$fileIDq/"."position$i") || die " could not open output file\n";
+      print OUT "class\t"."flux0\t"."flux0\t"."flux3\t"."flux5\t"."flux9\n";
+      $class = "unk";
+      $dir = "./indAAtest_flux/testingDataFLUX_$fileIDq"."/";
+      opendir(DIR,$dir)or die "can't open directory $dir:$!";
+      while ($filename = readdir DIR){ # loop through files
+          $filecount = $filecount + 1;
+          $filelocation = "$dir"."$filename";
+          open(IN, $filelocation) or die "Cannot open file";
+          my @IN = <IN>;
+          for (my $j = 0; $j < scalar @IN; $j++){
+	       my $INrow = $IN[$j];
+            my $INrow1 = $IN[$j+1];
+            my $INrow3 = $IN[$j+3];
+            my $INrow5 = $IN[$j+5];
+            my $INrow9 = $IN[$j+9];
+	       my @INrow = split (/\s+/, $INrow);
+            my @INrow1 = split (/\s+/, $INrow1);
+            my @INrow3 = split (/\s+/, $INrow3);
+            my @INrow5 = split (/\s+/, $INrow5);
+            my @INrow9 = split (/\s+/, $INrow9);
+              $pos = $INrow[1];
+              $flux = $INrow[2];
+              $pos1 = $INrow1[1];
+              $flux1 = $INrow1[2];
+              $pos3 = $INrow3[1];
+              $flux3 = $INrow3[2];
+              $pos5 = $INrow5[1];
+              $flux5 = $INrow5[2];
+              $pos9 = $INrow9[1];
+              $flux9 = $INrow9[2];
+              #print "pos=$pos\t"."flux=$flux\t"."pos1=$pos1\t"."flux1=$flux1\t"."pos3=$pos3\t"."flux3=$flux3\t"."pos5=$pos5\t"."flux5=$flux5\t"."pos9=$pos9\t"."flux9=$flux9\n";
+              if($pos == $i){print OUT "$class\t"."$flux\t"."$flux1\t"."$flux3\t"."$flux5\t"."$flux9\n";}
+              } # end for
+          close IN;
+      } # end while
+      close DIR;
+      close OUT;
+      } # end for
+        
+close MUT;
+} #end for loop
+} # end outer for loop
+
+} # end
+################################################################
+################################################################
+if ($vector_enter eq 'y'){  # build data sets with site-specific fluctuations and local correlations (at 1,3,5 and 9 AA sites downstream)
+mkdir("trainingData");     
+
+# collecting reference training data
+for (my $i = 0; $i <= $lengthID; $i++){
+print "collecting position $i for $refID\n";
+open (OUT, ">"."./trainingData/"."position$i") || die " could not open output file\n";
+print OUT "class\t"."flux0\t"."corr0\t"."corr3\t"."corr5\t"."corr9\n";
+$class = 0;
+$dir = "./indAAtrain_flux/trainingDataFLUX_$refID"."/";
+$dir1 = "./indAAtrain_corr/trainingDataCORR_$refID"."_1res/";
+$dir3 = "./indAAtrain_corr/trainingDataCORR_$refID"."_3res/";
+$dir5 = "./indAAtrain_corr/trainingDataCORR_$refID"."_5res/";
+$dir9 = "./indAAtrain_corr/trainingDataCORR_$refID"."_9res/";
+opendir(DIR,$dir)or die "can't open directory $dir0:$!";
+while ($filename = readdir DIR){ # loop through files
+    $filecount = $filecount + 1;
+    $filelocation = "$dir"."$filename";
+    open(IN, $filelocation) or die "Cannot open file";
+    my @IN = <IN>;
+    # find matching corr file names to flux file name
+    $subname = substr($filename,4);
+    #print "$subname\n";
+    $filename1 = "corr".$subname;
+    $filename3 = "corr".$subname;
+    $filename5 = "corr".$subname;
+    $filename9 = "corr".$subname;
+    #print "$filename1\t"."$filename3\t"."$filename5\t"."$filename9\n";
+    $filelocation1 = "$dir1"."$filename1";
+    open(IN1, $filelocation1);
+    my @IN1 = <IN1>;
+    $filelocation3 = "$dir3"."$filename3";
+    open(IN3, $filelocation3);
+    my @IN3 = <IN3>;
+    $filelocation5 = "$dir5"."$filename5";
+    open(IN5, $filelocation5);
+    my @IN5 = <IN5>;
+    $filelocation9 = "$dir9"."$filename9";
+    open(IN9, $filelocation9);
+    my @IN9 = <IN9>;
+    
+    for (my $j = 0; $j < scalar @IN; $j++){
+	 my $INrow = $IN[$j];
+      my $INrow1 = $IN1[$j];
+      my $INrow3 = $IN3[$j];
+      my $INrow5 = $IN5[$j];
+      my $INrow9 = $IN9[$j];
+	 my @INrow = split (/\s+/, $INrow);
+      my @INrow1 = split (/\s+/, $INrow1);
+      my @INrow3 = split (/\s+/, $INrow3);
+      my @INrow5 = split (/\s+/, $INrow5);
+      my @INrow9 = split (/\s+/, $INrow9);
+        $pos = $INrow[1];
+        $flux = $INrow[2];
+        $pos1 = $INrow1[1];
+        $corr1 = $INrow1[2];
+        $pos3 = $INrow3[1];
+        $corr3 = $INrow3[2];
+        $pos5 = $INrow5[1];
+        $corr5 = $INrow5[2];
+        $pos9 = $INrow9[1];
+        $corr9 = $INrow9[2];
+        #print "pos=$pos\t"."flux=$flux\t"."pos1=$pos1\t"."corr1=$corr1\t"."pos3=$pos3\t"."corr3=$corr3\t"."pos5=$pos5\t"."corr5=$corr5\t"."pos9=$pos9\t"."corr9=$corr9\n";
+        if($pos == $i){print OUT "$class\t"."$flux\t"."$corr1\t"."$corr3\t"."$corr5\t"."$corr9\n";}
+        
+    } # end for
+    close IN;
+    close IN1;
+    close IN3;
+    close IN5;
+    close IN9;
+} # end while
+close DIR;
+close OUT;
+} # end for
+
+# collecting query training data
+for (my $i = 0; $i <= $lengthID; $i++){
+print "collecting position $i for $queryID\n";
+open (OUT, ">>"."./trainingData/"."position$i") || die " could not open output file\n";
+$class = 1;
+$dir = "./indAAtrain_flux/trainingDataFLUX_$queryID"."/";
+$dir1 = "./indAAtrain_corr/trainingDataCORR_$queryID"."_1res/";
+$dir3 = "./indAAtrain_corr/trainingDataCORR_$queryID"."_3res/";
+$dir5 = "./indAAtrain_corr/trainingDataCORR_$queryID"."_5res/";
+$dir9 = "./indAAtrain_corr/trainingDataCORR_$queryID"."_9res/";
+opendir(DIR,$dir)or die "can't open directory $dir0:$!";
+while ($filename = readdir DIR){ # loop through files
+    $filecount = $filecount + 1;
+    $filelocation = "$dir"."$filename";
+    open(IN, $filelocation) or die "Cannot open file";
+    my @IN = <IN>;
+    # find matching corr file names to flux file name
+    $subname = substr($filename,4);
+    #print "$subname\n";
+    $filename1 = "corr".$subname;
+    $filename3 = "corr".$subname;
+    $filename5 = "corr".$subname;
+    $filename9 = "corr".$subname;
+    #print "$filename1\t"."$filename3\t"."$filename5\t"."$filename9\n";
+    $filelocation1 = "$dir1"."$filename1";
+    open(IN1, $filelocation1);
+    my @IN1 = <IN1>;
+    $filelocation3 = "$dir3"."$filename3";
+    open(IN3, $filelocation3);
+    my @IN3 = <IN3>;
+    $filelocation5 = "$dir5"."$filename5";
+    open(IN5, $filelocation5);
+    my @IN5 = <IN5>;
+    $filelocation9 = "$dir9"."$filename9";
+    open(IN9, $filelocation9);
+    my @IN9 = <IN9>;
+    
+    for (my $j = 0; $j < scalar @IN; $j++){
+	 my $INrow = $IN[$j];
+      my $INrow1 = $IN1[$j];
+      my $INrow3 = $IN3[$j];
+      my $INrow5 = $IN5[$j];
+      my $INrow9 = $IN9[$j];
+	 my @INrow = split (/\s+/, $INrow);
+      my @INrow1 = split (/\s+/, $INrow1);
+      my @INrow3 = split (/\s+/, $INrow3);
+      my @INrow5 = split (/\s+/, $INrow5);
+      my @INrow9 = split (/\s+/, $INrow9);
+        $pos = $INrow[1];
+        $flux = $INrow[2];
+        $pos1 = $INrow1[1];
+        $corr1 = $INrow1[2];
+        $pos3 = $INrow3[1];
+        $corr3 = $INrow3[2];
+        $pos5 = $INrow5[1];
+        $corr5 = $INrow5[2];
+        $pos9 = $INrow9[1];
+        $corr9 = $INrow9[2];
+        #print "pos=$pos\t"."flux=$flux\t"."pos1=$pos1\t"."corr1=$corr1\t"."pos3=$pos3\t"."corr3=$corr3\t"."pos5=$pos5\t"."corr5=$corr5\t"."pos9=$pos9\t"."corr9=$corr9\n";
+        if($pos == $i){print OUT "$class\t"."$flux\t"."$corr1\t"."$corr3\t"."$corr5\t"."$corr9\n";}
+        
+    } # end for
+    close IN;
+    close IN1;
+    close IN3;
+    close IN5;
+    close IN9;
+} # end while
+close DIR;
+close OUT;
+} # end for
+
+
+# collecting testing data
+for (my $g = 0; $g < 2; $g++){
+if ($g == 0) {open(MUT, "<"."copy_list.txt");}
+if ($g == 1) {open(MUT, "<"."variant_list.txt");}
+my @MUT = <MUT>;
+#print @MUT;
+for (my $p = 0; $p < scalar @MUT; $p++){
+	 if ($p == 0){next;}
+      my $MUTrow = $MUT[$p];
+      if ($g == 1 && $p == 1){next;}
+      if ($g == 1 && $p == 2){next;}
+      my @MUTrow = split (/\s+/, $MUTrow);
+	 $fileIDq = $MUTrow[0];
+      mkdir("testingData_$fileIDq");
+      for (my $i = 0; $i <= $lengthID; $i++){
+      print "collecting position $i for $fileIDq\n";
+      open (OUT, ">"."./testingData_$fileIDq/"."position$i") || die " could not open output file\n";
+      print OUT "class\t"."flux0\t"."corr0\t"."corr3\t"."corr5\t"."corr9\n";
+      $class = "unk";
+      $dir = "./indAAtest_flux/testingDataFLUX_$fileIDq"."/";
+      $dir1 = "./indAAtest_corr/testingDataCORR_$fileIDq"."_1res/";
+      $dir3 = "./indAAtest_corr/testingDataCORR_$fileIDq"."_3res/";
+      $dir5 = "./indAAtest_corr/testingDataCORR_$fileIDq"."_5res/";
+      $dir9 = "./indAAtest_corr/testingDataCORR_$fileIDq"."_9res/";
+      opendir(DIR,$dir)or die "can't open directory $dir0:$!";
+      while ($filename = readdir DIR){ # loop through files
+          $filecount = $filecount + 1;
+          $filelocation = "$dir"."$filename";
+          open(IN, $filelocation) or die "Cannot open file";
+          my @IN = <IN>;
+          # find matching corr file names to flux file name
+          $subname = substr($filename,4);
+          #print "$subname\n";
+          $filename1 = "corr".$subname;
+          $filename3 = "corr".$subname;
+          $filename5 = "corr".$subname;
+          $filename9 = "corr".$subname;
+          #print "$filename1\t"."$filename3\t"."$filename5\t"."$filename9\n";
+          $filelocation1 = "$dir1"."$filename1";
+          open(IN1, $filelocation1);
+          my @IN1 = <IN1>;
+          $filelocation3 = "$dir3"."$filename3";
+          open(IN3, $filelocation3);
+          my @IN3 = <IN3>;
+          $filelocation5 = "$dir5"."$filename5";
+          open(IN5, $filelocation5);
+          my @IN5 = <IN5>;
+          $filelocation9 = "$dir9"."$filename9";
+          open(IN9, $filelocation9);
+          my @IN9 = <IN9>;
+    
+         for (my $j = 0; $j < scalar @IN; $j++){
+        	 my $INrow = $IN[$j];
+           my $INrow1 = $IN1[$j];
+           my $INrow3 = $IN3[$j];
+           my $INrow5 = $IN5[$j];
+           my $INrow9 = $IN9[$j];
+     	 my @INrow = split (/\s+/, $INrow);
+           my @INrow1 = split (/\s+/, $INrow1);
+           my @INrow3 = split (/\s+/, $INrow3);
+           my @INrow5 = split (/\s+/, $INrow5);
+           my @INrow9 = split (/\s+/, $INrow9);
+             $pos = $INrow[1];
+             $flux = $INrow[2];
+             $pos1 = $INrow1[1];
+             $corr1 = $INrow1[2];
+             $pos3 = $INrow3[1];
+             $corr3 = $INrow3[2];
+             $pos5 = $INrow5[1];
+             $corr5 = $INrow5[2];
+             $pos9 = $INrow9[1];
+             $corr9 = $INrow9[2];
+             #print "pos=$pos\t"."flux=$flux\t"."pos1=$pos1\t"."corr1=$corr1\t"."pos3=$pos3\t"."corr3=$corr3\t"."pos5=$pos5\t"."corr5=$corr5\t"."pos9=$pos9\t"."corr9=$corr9\n";
+             if($pos == $i){print OUT "$class\t"."$flux\t"."$corr1\t"."$corr3\t"."$corr5\t"."$corr9\n";}
+        
+          } # end for
+          close IN;
+          close IN1;
+          close IN3;
+          close IN5;
+          close IN9;
+     } # end while
+     close DIR;
+     close OUT;
+     } # end for
+
+close MUT;
+} #end for loop
+} # end outer for loop
+
+} # end 
+
+
+
+############################################
+
+
 print("\nparsing is done\n");
 sleep(1);
 exit;

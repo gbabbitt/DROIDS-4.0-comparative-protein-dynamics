@@ -304,14 +304,14 @@ sub stop {exit;}
 sub control { # Write a control file and then call appropriate scripts that reference control file
 
 
-print "\nDo you want machine learning to later analyze protein shape changes over time in addition to atom fluctuations ? (y or n)\n";
-print "(default = n; ...answer y will slow post processing of dynamics)\n\n";
-$vector_enter = <STDIN>;
-chop($vector_enter);
-if($vector_enter eq ''){$vector_enter = 'n'}
-if($vector_enter eq 'Y'){$vector_enter = 'y'}
-if($vector_enter eq 'YES'){$vector_enter = 'y'}
-if($vector_enter eq 'yes'){$vector_enter = 'y'}
+#print "\nDo you want machine learning to later analyze protein shape changes over time in addition to atom fluctuations ? (y or n)\n";
+#print "(default = n; ...answer y will slow post processing of dynamics)\n\n";
+#$vector_enter = <STDIN>;
+#chop($vector_enter);
+#if($vector_enter eq ''){$vector_enter = 'n'}
+#if($vector_enter eq 'Y'){$vector_enter = 'y'}
+#if($vector_enter eq 'YES'){$vector_enter = 'y'}
+#if($vector_enter eq 'yes'){$vector_enter = 'y'}
 
 
 
@@ -490,7 +490,7 @@ print ctlFile4 "atomicfluct out fluct_$fileIDr"."_$i.txt \@CA,C,O,N,H&!(:WAT)\n"
 print ctlFile4 "run\n";
 close ctlFile4;
 
-if($vector_enter eq 'y'){
+=if($vector_enter eq 'y'){
 
 mkdir("atomvctl_$fileIDq");
 mkdir("atomvect_$fileIDq");
@@ -523,7 +523,9 @@ print ctlFile6 "vector ./atomvect_$fileIDr/vect_$fileIDr"."_aa$j"."_$i out ./ato
 print ctlFile6 "run\n";
 close ctlFile6;
 }
-}
+} 
+=cut
+
   } # end per run loop 
 
 my $prefix = "";
@@ -563,7 +565,7 @@ for(my $cnt = 0; $cnt < scalar @chainlen2; $cnt++){
 }
 print CTL "length\t"."$chainTTL\t # total length of chain\n";
 print CTL "start\t"."$startN\t # number of AA at start of chain\n";
-print CTL "shape\t"."$vector_enter\t # also analyze protein shape change?\n";
+#print CTL "shape\t"."$vector_enter\t # also analyze protein shape change?\n";
 #print CTL "cutoff_value\t"."$cutoffValue\t # p-value under which the KS comparison will be considered significant\n";
 #print CTL "representations\t"."$repStr\t # methods of molecular representation in Chimera (ribbon and/or surface)\n";
 #print CTL "test_type\t"."$testStr\t # test method (sequence = local Grantham dist, structure = RMSD, fluctuation = MD)\n";
@@ -757,12 +759,12 @@ sub flux { # launch atom fluctuation calc
 for (my $i = 0; $i < $runsID; $i++){
 system("cpptraj "."-i ./atomflux_$fileIDq"."_$i.ctl | tee cpptraj_atomflux_$fileIDq.txt");
 system("cpptraj "."-i ./atomflux_$fileIDr"."_$i.ctl | tee cpptraj_atomflux_$fileIDr.txt");
-if($vector_enter eq 'y'){
-for(my $j = 0; $j<$allchainlen; $j++){
-    system("cpptraj "."-i ./atomvctl_$fileIDq/atomvector_$fileIDq"."_aa$j"."_$i.ctl | tee cpptraj_atomvector_$fileIDq.txt");
-    system("cpptraj "."-i ./atomvctl_$fileIDr/atomvector_$fileIDr"."_aa$j"."_$i.ctl | tee cpptraj_atomvector_$fileIDr.txt");
-    }
-   }
+#if($vector_enter eq 'y'){
+#for(my $j = 0; $j<$allchainlen; $j++){
+#    system("cpptraj "."-i ./atomvctl_$fileIDq/atomvector_$fileIDq"."_aa$j"."_$i.ctl | tee cpptraj_atomvector_$fileIDq.txt");
+#    system("cpptraj "."-i ./atomvctl_$fileIDr/atomvector_$fileIDr"."_aa$j"."_$i.ctl | tee cpptraj_atomvector_$fileIDr.txt");
+#    }
+#   }
   }
 }
 
