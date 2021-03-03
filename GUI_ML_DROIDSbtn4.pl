@@ -700,6 +700,8 @@ print Rinput "myplot4 <- ggplot() + geom_col(data = dataframe6, aes(x = var, y =
 print Rinput "myplot4final <- myplot4\n"; 
 }
 
+goto SKIP;
+
 if ($bartype eq "total" && scalar(@variants) >= 4){ # ANOVA table from summary data
 print Rinput "library(rpsychi)\n";     
 print Rinput "dataframe7 = data.frame(var = my_impact_IDs, sum = my_impact_sums, sd = mySE, n = my_impact_n)\n";
@@ -767,6 +769,8 @@ print Rinput "print(pval)\n";
 print Rinput "sink()\n";
 }
 #####################################
+
+SKIP:
 
 print Rinput "library(grid)\n";
 print Rinput "pushViewport(viewport(layout = grid.layout(3, 2)))\n";

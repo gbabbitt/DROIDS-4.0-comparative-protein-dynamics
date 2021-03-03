@@ -868,7 +868,19 @@ for (my $p = 0; $p < scalar @MUT; $p++){
       } #end for loop
 close MUT;
 
-} # end outer for loop
+}# end outer for loop
+########################################################################################################
+sleep(1);
+print "Do you want to graph decision spaces for each method at each amino acid site? (y or n)\n\n";
+print "NOTE: requires python3, numpy, sklearn, and matplotlib installed\n\n";
+
+my $YorN = <STDIN>;
+chop($YoN);
+
+if($YorN eq "y" || $YorN eq "Y" || $YorN eq "yes" || $YorN eq "YES"){
+system ("python3 classtraining_spaceplot.py");     
+}
+########################################################################################################
 print "\n machine learning is complete\n\n";
 exit;
 ###########################################################################################################
