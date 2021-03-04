@@ -204,7 +204,7 @@ mkdir("trainingData");
 for (my $i = 0; $i <= $lengthID; $i++){
 print "collecting position $i for $refID\n";
 open (OUT, ">"."./trainingData/"."position$i") || die " could not open output file\n";
-print OUT "class\t"."flux0\t"."flux0\t"."flux3\t"."flux5\t"."flux9\n";
+print OUT "class\t"."flux0\t"."flux1\t"."flux3\t"."flux5\t"."flux9\n";
 $class = 0;
 $dir = "./indAAtrain_flux/trainingDataFLUX_$refID"."/";
 opendir(DIR,$dir)or die "can't open directory $dir:$!";
@@ -309,7 +309,7 @@ for (my $p = 0; $p < scalar @MUT; $p++){
       for (my $i = 0; $i <= $lengthID; $i++){
       print "collecting position $i for $fileIDq\n";
       open (OUT, ">"."./testingData_$fileIDq/"."position$i") || die " could not open output file\n";
-      print OUT "class\t"."flux0\t"."flux0\t"."flux3\t"."flux5\t"."flux9\n";
+      print OUT "class\t"."flux0\t"."flux1\t"."flux3\t"."flux5\t"."flux9\n";
       $class = "unk";
       $dir = "./indAAtest_flux/testingDataFLUX_$fileIDq"."/";
       opendir(DIR,$dir)or die "can't open directory $dir:$!";
@@ -366,7 +366,7 @@ mkdir("trainingData");
 for (my $i = 0; $i <= $lengthID; $i++){
 print "collecting position $i for $refID\n";
 open (OUT, ">"."./trainingData/"."position$i") || die " could not open output file\n";
-print OUT "class\t"."flux0\t"."corr0\t"."corr3\t"."corr5\t"."corr9\n";
+print OUT "class\t"."flux0\t"."corr1\t"."corr3\t"."corr5\t"."corr9\n";
 $class = 0;
 $dir = "./indAAtrain_flux/trainingDataFLUX_$refID"."/";
 $dir1 = "./indAAtrain_corr/trainingDataCORR_$refID"."_1res/";
@@ -525,7 +525,7 @@ for (my $p = 0; $p < scalar @MUT; $p++){
       for (my $i = 0; $i <= $lengthID; $i++){
       print "collecting position $i for $fileIDq\n";
       open (OUT, ">"."./testingData_$fileIDq/"."position$i") || die " could not open output file\n";
-      print OUT "class\t"."flux0\t"."corr0\t"."corr3\t"."corr5\t"."corr9\n";
+      print OUT "class\t"."flux0\t"."corr1\t"."corr3\t"."corr5\t"."corr9\n";
       $class = "unk";
       $dir = "./indAAtest_flux/testingDataFLUX_$fileIDq"."/";
       $dir1 = "./indAAtest_corr/testingDataCORR_$fileIDq"."_1res/";
