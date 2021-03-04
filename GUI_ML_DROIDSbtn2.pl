@@ -197,7 +197,7 @@ close MUT;
 
 #####################################################################
 #####################################################################
-if ($vector_enter ne 'y'){ # build data sets with local fluctuations (within 5 AA site window) only
+if ($vector_enter ne 'y'){ # build data sets with local fluctuations only (0, 1, 3, 5, 9, sites downstream)
 mkdir("trainingData");     
 
 # collecting reference training data
@@ -234,7 +234,11 @@ while ($filename = readdir DIR){ # loop through files
         $flux5 = $INrow5[2];
         $pos9 = $INrow9[1];
         $flux9 = $INrow9[2];
-        #print "pos=$pos\t"."flux=$flux\t"."pos1=$pos1\t"."flux1=$flux1\t"."pos3=$pos3\t"."flux3=$flux3\t"."pos5=$pos5\t"."flux5=$flux5\t"."pos9=$pos9\t"."flux9=$flux9\n";
+								if($flux1 eq ''){$flux1 = $flux;}
+								if($flux3 eq ''){$flux3 = $flux;}
+								if($flux5 eq ''){$flux5 = $flux;}
+								if($flux9 eq ''){$flux9 = $flux;}
+								#print "pos=$pos\t"."flux=$flux\t"."pos1=$pos1\t"."flux1=$flux1\t"."pos3=$pos3\t"."flux3=$flux3\t"."pos5=$pos5\t"."flux5=$flux5\t"."pos9=$pos9\t"."flux9=$flux9\n";
         if($pos == $i){print OUT "$class\t"."$flux\t"."$flux1\t"."$flux3\t"."$flux5\t"."$flux9\n";}
     } # end for
     close IN;
@@ -275,6 +279,10 @@ while ($filename = readdir DIR){ # loop through files
         $flux5 = $INrow5[2];
         $pos9 = $INrow9[1];
         $flux9 = $INrow9[2];
+								if($flux1 eq ''){$flux1 = $flux;}
+								if($flux3 eq ''){$flux3 = $flux;}
+								if($flux5 eq ''){$flux5 = $flux;}
+								if($flux9 eq ''){$flux9 = $flux;}
         #print "pos=$pos\t"."flux=$flux\t"."pos1=$pos1\t"."flux1=$flux1\t"."pos3=$pos3\t"."flux3=$flux3\t"."pos5=$pos5\t"."flux5=$flux5\t"."pos9=$pos9\t"."flux9=$flux9\n";
         if($pos == $i){print OUT "$class\t"."$flux\t"."$flux1\t"."$flux3\t"."$flux5\t"."$flux9\n";}
     } # end for
@@ -331,6 +339,10 @@ for (my $p = 0; $p < scalar @MUT; $p++){
               $flux5 = $INrow5[2];
               $pos9 = $INrow9[1];
               $flux9 = $INrow9[2];
+														if($flux1 eq ''){$flux1 = $flux;}
+														if($flux3 eq ''){$flux3 = $flux;}
+														if($flux5 eq ''){$flux5 = $flux;}
+														if($flux9 eq ''){$flux9 = $flux;}
               #print "pos=$pos\t"."flux=$flux\t"."pos1=$pos1\t"."flux1=$flux1\t"."pos3=$pos3\t"."flux3=$flux3\t"."pos5=$pos5\t"."flux5=$flux5\t"."pos9=$pos9\t"."flux9=$flux9\n";
               if($pos == $i){print OUT "$class\t"."$flux\t"."$flux1\t"."$flux3\t"."$flux5\t"."$flux9\n";}
               } # end for

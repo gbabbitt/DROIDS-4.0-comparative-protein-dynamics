@@ -1571,6 +1571,7 @@ $start = $start + $step;
 $stop = $stop + $step;
 }
 
+if ($vector_enter eq 'y'){
 # loop through .nc files on refID
 mkdir ("testingDataCORR_$fileIDq"."_ALLPAIRS") or die "please delete testing data folder from previous run\n";
 $TRAJfile = "prod_$fileIDq"."REDUCED_deploy.nc";
@@ -1669,7 +1670,7 @@ while ($filename = readdir DIR){
 
  }
 
-
+} # end if conditional
 
 ############################################
 
