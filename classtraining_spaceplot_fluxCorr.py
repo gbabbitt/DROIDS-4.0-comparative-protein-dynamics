@@ -36,6 +36,8 @@ from sklearn.discriminant_analysis import LinearDiscriminantAnalysis, QuadraticD
 
 os.mkdir("trainingPlots")
 for filename in os.listdir("trainingData"):
+    if(filename == 'position0'):
+        next
     inpath = "trainingData/%s" % (filename)
     outpath = "trainingPlots/%s" % (filename)
     df = pd.read_table(inpath, sep="\s+")
