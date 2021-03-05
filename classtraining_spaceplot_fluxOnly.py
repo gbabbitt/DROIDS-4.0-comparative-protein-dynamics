@@ -92,8 +92,10 @@ for filename in os.listdir("trainingData"):
                              np.arange(y_min, y_max, h))
 
         # just plot the dataset first
-        cm = plt.cm.RdBu
-        cm_bright = ListedColormap(['#FF0000', '#0000FF'])
+        # cm = plt.cm.RdBu
+        cm = plt.cm.coolwarm
+        # cm_bright = ListedColormap(['#FF0000', '#0000FF'])
+        cm_bright = ListedColormap(['tab:red', 'tab:blue'])
         ax = plt.subplot(len(datasets), len(classifiers) + 1, i)
         if ds_cnt == 0:
             ax.set_title("Input data")
