@@ -877,10 +877,10 @@ print "Do you want to graph decision spaces for each method at each amino acid s
 print "NOTE: requires python3, numpy, sklearn, and matplotlib installed\n\n";
 
 my $YorN = <STDIN>;
-chop($YoN);
+chop($YorN);
 
 if($YorN eq "y" || $YorN eq "Y" || $YorN eq "yes" || $YorN eq "YES"){
-system ("python3 classtraining_spaceplot.py\n");     
+system "python3 classtraining_spaceplot_fluxOnly.py\n";     
 }
 ########################################################################################################
 print "\n machine learning is complete\n\n";
