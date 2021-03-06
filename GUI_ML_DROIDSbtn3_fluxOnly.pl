@@ -880,7 +880,9 @@ my $YorN = <STDIN>;
 chop($YorN);
 
 if($YorN eq "y" || $YorN eq "Y" || $YorN eq "yes" || $YorN eq "YES"){
-system "python3 classtraining_spaceplot_fluxOnly.py\n";     
+system "python3 classtraining_spaceplot_fluxOnly.py\n";
+sleep(3);
+system "xdg-open ./trainingPlots/position1.png\n";
 }
 ########################################################################################################
 print "\n machine learning is complete\n\n";

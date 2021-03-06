@@ -95,7 +95,7 @@ for filename in os.listdir("trainingData"):
         # cm = plt.cm.RdBu
         cm = plt.cm.coolwarm
         # cm_bright = ListedColormap(['#FF0000', '#0000FF'])
-        cm_bright = ListedColormap(['tab:red', 'tab:blue'])
+        cm_bright = ListedColormap(['tab:blue', 'tab:red'])
         ax = plt.subplot(len(datasets), len(classifiers) + 1, i)
         if ds_cnt == 0:
             ax.set_title("Input data")
