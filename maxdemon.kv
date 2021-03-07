@@ -5,13 +5,13 @@
         size: root.width-200, root.height-200
         pos: 100, 100
         Label:
-            text: 'maxDemon - machine learning detection of functionally conserved'
+            text: 'maxDemon - classification of functionally conserved dynamics'
             font_size: 24
             size_hint: 0.5, 0.2
             bold: True
             color: 0.1, 0.85, 0.85, 1
         Label:
-            text: 'dynamics and impacts of genetic and/or drug variants'
+            text: 'and significant impacts of genetic/drug variants'
             font_size: 24
             size_hint: 0.5, 0.2
             bold: True
@@ -89,7 +89,7 @@
                     color: 0, 0, 0, 1
                     active: True
                 Label:
-                    text: "learn correlations as well as fluctuations"
+                    text: "learn atom flux + corr (default flux only)"
                     size_hint: 0.3, 0.1
                     color: 0, 0, 0, 1
                     bold: True
@@ -108,7 +108,7 @@
                     size_hint: 0.3, 0.1
                 Button:
                     id: btn1
-                    text: "(1) run new MD sims for deployment"
+                    text: "(1) run MD (validation and variants)"
                     on_press: root.btn1()
                     background_color: 0.1, 0.9, 0.9, 1
                     on_release: btn1.background_color=(0.9, 0.1, 0.1, 1)
@@ -128,13 +128,13 @@
                     size_hint: 0.3, 0.1
                 Button:
                     id: btn3
-                    text: "(3) deploy machine learning stack"   
+                    text: "(3) deploy machine learning models"   
                     on_press: root.btn3()
                     background_color: 0.1, 0.9, 0.9, 1
                     on_release: btn3.background_color=(0.9, 0.1, 0.1, 1)
                 Button:
                     id: btn4
-                    text: "(4) conserved/coordinated dynamics+impacts"   
+                    text: "(4) calc conserved dynamics+impacts"   
                     on_press: root.btn4()
                     background_color: 0.1, 0.9, 0.9, 1
                     on_release: btn4.background_color=(0.9, 0.1, 0.1, 1)
@@ -168,13 +168,13 @@
                     size_hint: 0.3, 0.1
                 Button:
                     id: btn7
-                    text: "(7) map variant impacts on cons dynamics"   
+                    text: "(7) map significant genetic/drug impact"   
                     on_press: root.btn7()
                     background_color: 0.1, 0.9, 0.9, 1
                     on_release: btn7.background_color=(0.9, 0.1, 0.1, 1)
                 Button:
                     id: btn8
-                    text: "(8) play movies of learners over time"   
+                    text: "(8) play movies of learning process"   
                     on_press: root.btn8()
                     background_color: 0.1, 0.9, 0.9, 1
                     on_release: btn8.background_color=(0.9, 0.1, 0.1, 1)
