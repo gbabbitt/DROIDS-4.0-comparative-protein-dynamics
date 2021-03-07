@@ -773,7 +773,7 @@ print Rinput "library(ggplot2)\n";
 print Rinput "library(gridExtra)\n";
 
 # read data into R
-# KNN
+# KNNsleep(3);
 print Rinput "datatableKNN = read.table('./maxDemon_results/classpositionHISTOknn_$fileIDq.txt', header = TRUE)\n"; 
 $AAposition_knn = "datatableKNN\$position"; # AA position
 $sum_classifiers_knn = "datatableKNN\$sum"; # sum of classifiers
