@@ -101,215 +101,279 @@ for (my $i = 0; $i < scalar @IN2; $i++){
 }
 close IN2;
 
+# create array of names of copies and variants
+open(MUT, "<"."copy_list.txt");
+my @MUT = <MUT>;
+#print @MUT;
+@copies = ();
+for (my $p = 0; $p < scalar @MUT; $p++){
+	 if ($p == 0){next;}
+      my $MUTrow = $MUT[$p];
+      my @MUTrow = split (/\s+/, $MUTrow);
+	 $fileIDq = $MUTrow[0];
+      push (@copies, $fileIDq);
+      } #end for loop
+close MUT;
+print "\n copies are @copies\n\n";
+sleep(1);
 
-sleep(1);print "\nSELECT INTERACTION TYPE (1=protein only | 2=protein-protein | 3=DNA-protein | 4=protein-ligand)\n\n";
-my $stype_number = <STDIN>;
-chop($stype_number);
-
-if($stype_number == 1){$stype = "protein";}
-if($stype_number == 2){$stype = "protprot";}
-if($stype_number == 3){$stype = "dna";}
-if($stype_number == 4){$stype = "ligand";}
-
-if($stype eq "dna" || $stype eq "ligand"){$orig_queryID = $queryID; $queryID = $refID;}
-
-########################################################################################
-######################     SUBROUTINES     #############################################
-########################################################################################
-
-#sub image1 {
-
-# enforce orig $queryID from training set
-print "queryID label is "."$queryID\n";
-if($queryID =~ m/_1_1/){$queryID = substr($queryID, 0, length($queryID)-4);}
-if($queryID =~ m/_1/){$queryID = substr($queryID, 0, length($queryID)-2);}
-print "queryID label is adjusted to "."$queryID\n";
-$orig_queryID = $queryID;  # create tag for original query in training set
-$queryID = "$queryID"."_1"; # set query to first copy for this subroutine
-print "queryID label is adjusted to "."$queryID\n\n\n";
-
-print "\nEnter chain ID where color map should start (default = A)\n";
-   print "i.e. color map only to homologous parts of bound and unbound
-   structure\n";
-   $chainMAP = <STDIN>;
-   chop($chainMAP);
-   if ($chainMAP eq ''){$chainMAP = 'A';}
-
-if($stype eq 'dna' || $stype eq 'ligand' || $stype eq 'protprot'){
-   print "\nEnter number position of N terminal on this chain (default = 0)\n";
-   $offset = <STDIN>;
-   chop($offset);
-   $offset = $offset-2;
-   if ($offset eq ''){$offset = 0;}
-   }
+# create array of names of copies and variants
+open(MUT, "<"."variant_list.txt");
+my @MUT = <MUT>;
+#print @MUT;
+@variants = ();
+for (my $p = 0; $p < scalar @MUT; $p++){
+	 if ($p == 0){next;}
+      my $MUTrow = $MUT[$p];
+      my @MUTrow = split (/\s+/, $MUTrow);
+	 $fileIDq = $MUTrow[0];
+      push (@variants, $fileIDq);
+      } #end for loop
+close MUT;
+print "\n variants are @variants\n\n";
+sleep(1);
 
 
-print "\nDO YOU WANT TO MAP CONSERVED REGIONS OR MUTUAL INFORMATION VALUES?\n";
-   print "(TYPE = 'cons' or 'mi')\n";
-   print "i.e. color map only to homologous parts of bound and unbound
-   structure\n";
-   $typeMAP = <STDIN>;
-   chop($typeMAP);
-   if ($typeMAP eq ''){$typeMAP = 'cons';}
-   if ($typeMAP eq 'CONS'){$typeMAP = 'cons';}
-   if ($typeMAP eq 'MI'){$typeMAP = 'mi';}
+# create array of names of copies and variants
+open(MUT, "<"."variant_label_list.txt");
+my @MUT = <MUT>;
+#print @MUT;
+@variant_labels = ();
+for (my $p = 0; $p < scalar @MUT; $p++){
+	 if ($p == 0){next;}
+      my $MUTrow = $MUT[$p];
+      my @MUTrow = split (/\s+/, $MUTrow);
+	 $fileIDq = $MUTrow[0];
+      push (@variant_labels, $fileIDq);
+      } #end for loop
+close MUT;
+print "\n variant labels are @variant_labels\n\n";
+sleep(1);
 
-if ($typeMAP eq 'mi'){   
+print "Enter number position of N terminal on this chain\n";
+print "(default = 0)\n\n";
+my $startN = <STDIN>;
+chop($startN);
+if ($startN eq ''){$startN = 0;}
+
+print "Choose color palette for matrix (type 'heat' or 'wesanderson')\n";
+print "NOTE: zissou1 color palette requires install.packages('wesanderson') in R \n";
+print "(default = 'heat')\n\n";
+my $pal = <STDIN>;
+chop($pal);
+if ($pal eq ''){$pal = 'heat';}
+
+################################################################
+################################################################
+#print "\n THIS FEATURE IS UNDER RECONSTRUCTION....try again later\n\n"; exit;
+
 # prompt user - selest machine learner for MI matrix
-sleep(1);print "\nCHOOSE BEST LEARNER FOR MUTUAL INFORMATION MAPPING (type 'KNN', 'NB', 'LDA', 'QDA', 'SVM', 'RFOR' or 'ADA')\n\n";
-$learner = <STDIN>;
+sleep(1);print "CHOOSE BEST LEARNER FOR MUTUAL INFORMATION MATRIX (type 'KNN', 'NB', 'LDA', 'QDA', 'SVM', 'RFOR' or 'ADA')\n\n";
+my $learner = <STDIN>;
 chop($learner);
-# prompt user - selest variant for MI matrix
-sleep(1);print "\nSELECT VARIANT ID FOR MUTUAL INFORMATION MAPPING (e.g. type '1yet_unbound_2')\n\n";
-$variantID = <STDIN>;
-chop($variantID);
-# prompt user - selest AA site for MI mapping
-sleep(1);print "\nSELECT AMINO ACID REFERENCE SITE MUTUAL INFORMATION MAPPING (e.g. type '50' for interaction strengths with AA 50)\n\n";
-$siteID = <STDIN>;
-chop($siteID);
-}
 
+for (my $v = 0; $v < scalar(@variants); $v++){
+     $variantID = $variants[$v];
+     $queryID = $variants[0];
+     $variantID_label = $variant_labels[$v];
+     $queryID_label = $variant_labels[0];
 
-# create mask for signif Wilks lamda
-open(OUT, ">"."./testingData_$queryID/adj_vertpvals_$queryID.txt")||die "could not create mask file /testingData_$queryID/adj_vertpvals_$queryID.txt\n";  
-open(IN, "<"."./testingData_$queryID/adj_pvals_$queryID.txt")||die "could not open mask file /testingData_$queryID/adj_pvals_$queryID.txt\n";  
-my @IN = <IN>;
-for (my $i = 0; $i < scalar @IN; $i++) {
-	$INrow = $IN[$i];
-     @INrow = split(/] /, $INrow);
-	$trunINrow = $INrow[1];
-     #print OUT "$trunINrow";
-     @trunINrow = split(/\s+/, $trunINrow);
-     for (my $ii = 0; $ii < scalar(@trunINrow); $ii++){
-     $value = $trunINrow[$ii];
-     print OUT "$value\n";
-     }
-     }
-close IN;
-close OUT;
+# initialize     
+$residue1 = 0;
+$residue2 = 0;
+$MI = 0;
+# open MI matrix files
+open(MI, ">"."./testingData_$variantID/MIcolumn_$learner"."_$variantID.txt") or die "could not open MI matrix file for $variantID \n";    
+print MI "pos1\t"."pos2\t"."MI\n";
+open(MI2, ">"."./testingData_$variantID/MImatrix_$learner"."_$variantID.txt") or die "could not open MI matrix file for $variantID \n";    
+#print MI2 "residue\t";
+#for (my $n = 0; $n < $lengthID; $n++){print MI2 "$n\t";}
+#print MI2 "\n";
 
-if ($typeMAP eq 'cons'){
-
-# make learned class attribute files for image rendering
-  open(OUT, ">"."./attribute_files/classATTR_$refID"."_mask".".dat")||die "could not create ATTR time series file\n";
-  #if ($stype ne "protprot"){open(OUT, ">"."./attribute_files/classATTR_$refID"."_mask".".dat")||die "could not create ATTR time series file\n";}  
-  #if ($stype eq "protprot"){open(OUT, ">"."./attribute_files/classATTR_$orig_queryID"."_mask".".dat")||die "could not create ATTR time series file\n";}  
-  print OUT "recipient: residues\n";
-  print OUT "attribute: class\n";
-  print OUT "\n";
-  
-   for (my $a = 0; $a < $lengthID+$offset+1; $a++){
-   if ($a eq '' || $a <= $offset){next;}
-   open(IN, "<"."./testingData_$queryID/adj_vertpvals_$queryID.txt")||die "could not open mask file /testingData_$queryID/adj_vertpvals_$queryID.txt\n";  
-    my @IN = <IN>;
-   $INrow = $IN[$a-$offset];
-    @INrow = split(/\s+/, $INrow);
-    $maskvalue = $INrow[0];
-   
-     #print "$a\t"."$frame\t"."$value\n";
-     $pos = $a+1;
-     if ($maskvalue == 1){print OUT "\t:"."$pos".".$chainMAP\t"."1\n";}
-     #if ($f == $frame && $maskvalue == 1){print OUT "\t:"."$pos\t"."1\n";} # to test mask positioning
-     if ($maskvalue == 0){print OUT "\t:"."$pos".".$chainMAP\t"."0\n";}
-     
- 
- close IN;
- }
- close OUT;
-
-print "\n class attribute files for all frames are created\n";
+#  create vertical files of 0,1 for analysis
+print "\n reading input files \n";     
 sleep(1);
+
+for (my $g = 1; $g < $lengthID; $g++){
+open(POS1, "<"."./testingData_$variantID/indAAclass$learner/position_$g.txt") or die "could not open position_$g.txt \n";
+	 open(VPOS1, ">"."./testingData_$variantID/indAAclass$learner/vertposition_$g.txt") or die "could not open vertposition_$g.txt \n";
+	   my @POS1 = <POS1>;
+	   # collect zeros and ones and print vertically
+	   for (my $z = 0; $z < scalar @POS1; $z++){
+              my $POS1row = $POS1[$z];
+              my @POS1row = split (/\s+/, $POS1row);
+	         $head = $POS1row[0];
+		    $value = $POS1row;
+		    #print "reading i\t"."$head\t"."$value\n";
+	         if ($head ne "[1]" || $head ne "Levels:"){
+			    $ZerosOnes = $value;
+			    #print "ZerosOnes\t"."$ZerosOnes\n";
+			    @ZerosOnes = split(/\s+/, $ZerosOnes);
+			    for (my $zz = 0; $zz < scalar @ZerosOnes; $zz++){
+				  $classvalue = $ZerosOnes[$zz];
+				  if($classvalue eq "0" || $classvalue eq "1"){print VPOS1 "$classvalue\n";}
+				  #print "classvalue\t"."$classvalue\n";
+			       }
+			    }
+		    }
+	 close POS1;
+	 close VPOS1;
 }
+sleep(2);
 
-if ($typeMAP eq 'mi'){
-
-print "collecting MI values over all interaction sites for given amino acid\n";
-   sleep(1);
-   open(OUT, ">"."./maxDemon_results/MIsite_$learner"."_$variantID.txt")||die "could not open mask file /maxDemon_results/MIcolumn_$learner"."_$variantID.txt\n";  
-   print OUT "position\t"."MIvalue\n";
-   open(IN, "<"."./maxDemon_results/MIcolumn_$learner"."_$variantID.txt")||die "could not open mask file /maxDemon_results/MIcolumn_$learner"."_$variantID.txt\n";  
-    my @IN = <IN>;
-    for (my $a = 0; $a < scalar @IN; $a++){
-      $INrow = $IN[$a];
-      @INrow = split(/\s+/, $INrow);
-      $first = $INrow[0];
-      $second = $INrow[1];
-      $MIvalue = $INrow[2];
-      if ($siteID == $first){print OUT "$second\t"."$MIvalue\n";}
-    
-    }
-    close IN;
-    close OUT;
-
-
-
-
-# make learned class attribute files for image rendering
-  open(OUT, ">"."./attribute_files/classATTR_$refID"."_mask".".dat")||die "could not create ATTR time series file\n";
-  #if ($stype ne "protprot"){open(OUT, ">"."./attribute_files/classATTR_$refID"."_mask".".dat")||die "could not create ATTR time series file\n";}  
-  #if ($stype eq "protprot"){open(OUT, ">"."./attribute_files/classATTR_$orig_queryID"."_mask".".dat")||die "could not create ATTR time series file\n";}  
-  print OUT "recipient: residues\n";
-  print OUT "attribute: class\n";
-  print OUT "\n";
-  
-   
-   
-   for (my $a = 0; $a < $lengthID+$offset+1; $a++){
-   if ($a eq '' || $a <= $offset){next;}
-   open(IN, "<"."./maxDemon_results/MIsite_$learner"."_$variantID.txt")||die "could not open mask file /maxDemon_results/MIcolumn_$learner"."_$variantID.txt\n";  
-    my @IN = <IN>;
-   $INrow = $IN[$a-$offset];
-    @INrow = split(/\s+/, $INrow);
-    $MIvalue = $INrow[1];
-   
-     #print "$a\t"."$frame\t"."$value\n";
-     $pos = $a+1;
-     print OUT "\t:"."$pos".".$chainMAP\t"."$MIvalue\n";
-     
- 
- close IN;
- }
- close OUT;
-
-print "\n class attribute files for all frames are created\n";
+print "\ncalculating mutual information matrix for $variantID \n";     
 sleep(1);
+for (my $i = 1; $i < $lengthID; $i++){
+	 
+      print "calculating MI values for residue\t"."$residue1 for $variantID\n";
+      open(POS1, "<"."./testingData_$variantID/indAAclass$learner/vertposition_$i.txt") or die "could not open MI matrix file for ./testingData_$variantID/indAAclass$learner/position_$i.txt \n";    
+      my @POS1 = <POS1>;
+	 $residue1 = $i;
+      if($i>0){print MI2 "\n";}
+      #if($i==0){print MI2 "$residue1\t";}
+      #if($i>0){print MI2 "\n"; print MI2 "$residue1\t";}
+      for (my $j = 1; $j < $lengthID; $j++){
+	     
+	     open(POS2, "<"."./testingData_$variantID/indAAclass$learner/vertposition_$j.txt") or die "could not open MI matrix file for ./testingData_$variantID/indAAclass$learner/position_$j.txt \n";    
+          my @POS2 = <POS2>;
+          $residue2 = $j;
+          
+          #calculate freq A
+          #print "calculating freq state A\t";
+          $freqA = 0;
+          $sumclassA = 0;
+          $cntA = 0;
+          for (my $ii = 0; $ii < scalar @POS1; $ii++){
+              my $POS1row = $POS1[$ii];
+              my @POS1row = split (/\s+/, $POS1row);
+	         $class1 = $POS1row[0];
+              $time1 = $ii;
+              if($class1 == 0 || $class1 == 0.5 || $class1 == 1) {$sumclassA = $sumclassA+$class1; $cntA = $cntA+1;}
+              #print "Residue1\t"."$residue1\t"."timeslice\t"."$time1\t"."class = "."$class1\n";
+              }
+              $freqA = $sumclassA/($cntA+0.0001);
+              #print "freqA = "."$freqA\n";
+          
+          #calculate freq B
+          #print "calculating freq state B\t";
+          $freqB = 0;
+          $sumclassB = 0;
+          $cntB = 0;
+          for (my $jj = 0; $jj < scalar @POS2; $jj++){
+              my $POS2row = $POS2[$jj];
+              my @POS2row = split (/\s+/, $POS2row);
+	         $class2 = $POS2row[0];
+              $time2 = $jj;
+              if($class2 == 0 || $class2 == 0.5 || $class2 == 1) {$sumclassB = $sumclassB+$class2; $cntB = $cntB+1;}
+              #print "Residue2\t"."$residue2\t"."timeslice\t"."$time2\t"."class = "."$class2\n";
+              }
+              $freqB = $sumclassB/($cntB+0.0001);
+              #print "freqB = "."$freqB\n";
+          
+          #calculate freq A and B
+          #print "calculating freq state A and B\t";
+          $freqAB = 0;
+          $sumclassAB = 0;
+          $cntAB = 0;
+          for (my $ii = 0; $ii < scalar @POS1; $ii++){
+              my $POS1row = $POS1[$ii];
+              my @POS1row = split (/\s+/, $POS1row);
+	         $class1 = $POS1row[0];
+              $time1 = $ii;
+              #if($class1 == 0 || $class1 == 0.5 || $class1 == 1) {$sumclassA = $sumclassA+$class1; $cntA = $cntA+1;}
+              #print "Residue1\t"."$residue1\t"."timeslice\t"."$time1\t"."class = "."$class1\n";
+              for (my $jj = 0; $jj < scalar @POS2; $jj++){
+              my $POS2row = $POS2[$jj];
+              my @POS2row = split (/\s+/, $POS2row);
+	         $class2 = $POS2row[0];
+              $time2 = $jj;
+              if($time1 ==$time2 && $class1 == $class2) {$sumclassAB = $sumclassAB+1; $cntAB = $cntAB+1;}
+              if($time1 ==$time2 && $class1 != $class2) {$cntAB = $cntAB+1;}
+              #print "Residue2\t"."$residue2\t"."timeslice\t"."$time2\t"."class = "."$class2\n";
+              }
+              }
+              $freqAB = $sumclassAB/($cntAB+0.0001);
+              #print "freqAB = "."$freqAB\n";
+                    
+          # calculate MI
+          $MI = $freqAB*log(($freqAB+0.0001)/(($freqA*$freqB)+0.0001));
+          if ($MI>1){$MI = 1;}
+          #print "MImatrix\t"."$residue1\t"."$residue2\t"."$MI\n";
+          print MI "$residue1\t"."$residue2\t"."$MI\n";
+          print MI2 "$MI\t";
+      }
+}
+
+close MI;
+close MI2;
+
+print "\nheatmapping mutual information matrix for $variantID (close .pdf to continue)\n";     
+sleep(1);
+
+open (Rinput, "| R --vanilla")||die "could not start R command line\n";
+print Rinput "datamatrixMI = read.table('./testingData_$variantID/MImatrix_$learner"."_$variantID.txt', header = FALSE)\n";
+#print Rinput "print(datamatrixMI)\n";
+print Rinput "datamatrixMI<-as.matrix(datamatrixMI)\n";
+print Rinput "myMImean <- mean(datamatrixMI)\n";
+print Rinput "myMImean <- round(myMImean, digits=4)\n";
+print Rinput "print(myMImean)\n";
+print Rinput "myMIsd <- sd(datamatrixMI)\n";
+print Rinput "myMIsd <- round(myMIsd, digits=4)\n";
+print Rinput "print(myMIsd)\n";
+#print Rinput "print(datamatrixMI)\n";
+#print Rinput "datamatrixMI <- scale(datamatrixMI)\n";
+#print Rinput "mymap1<-heatmap(datamatrixMI, Colv = 'Rowv', symm = TRUE, keep.dendro = FALSE)\n";
+#print Rinput "print(mymap1)\n";
+print Rinput "x <- (1:nrow(datamatrixMI))\n";
+print Rinput "y <- (1:ncol(datamatrixMI))\n";
+if($pal eq 'heat'){
+print Rinput "mymap2<-image(x+$startN, y+$startN, datamatrixMI, col = hcl.colors(20, 'heat', rev = TRUE), main = c('MUTUAL INFORMATION for $variantID (red = significant))', paste('mean MI = ', myMImean, 'sd MI = ', myMIsd)), xlab = 'residue position', ylab = 'residue position')\n";
+}
+if($pal eq 'wesanderson'){
+# for wes anderson color palette (install.packages('wesanderson'))
+print Rinput "library(wesanderson)\n";
+print Rinput "pal <- wes_palette('Zissou1', 100, type = 'continuous')\n";
+print Rinput "mymap2<-image(x+$startN, y+$startN, datamatrixMI, col = pal, main = c('MUTUAL INFORMATION for $variantID (red = significant))', paste('mean MI = ', myMImean, 'sd MI = ', myMIsd)), xlab = 'residue position', ylab = 'residue position')\n";
+}
+print Rinput "print(mymap2)\n";      
+# write to output file and quit R
+print Rinput "q()\n";# quit R 
+print Rinput "n\n";# save workspace image?
+close Rinput;
+print "\n\n";
+print " copying plot\n\n";
+sleep(1);
+my $oldfilename = "Rplots.pdf";
+my $newfilename = "./testingData_$variantID/MImatrix_$learner"."_$variantID.pdf";
+my $newfilename2 = "./maxDemon_results/MImatrix_$learner"."_$variantID.pdf";
+copy($oldfilename, $newfilename);
+copy($oldfilename, $newfilename2);
+my $oldfilename3 = "./testingData_$variantID/MImatrix_$learner"."_$variantID.txt";
+my $newfilename3 = "./maxDemon_results/MImatrix_$learner"."_$variantID.txt";
+copy($oldfilename3, $newfilename3);
+my $oldfilename4 = "./testingData_$variantID/MIcolumn_$learner"."_$variantID.txt";
+my $newfilename4 = "./maxDemon_results/MIcolumn_$learner"."_$variantID.txt";
+copy($oldfilename4, $newfilename4);
+print " mutual information matrix is complete\n\n";
+print " close PDF and txt viewer to continue\n\n";
+
+
+} # end for loop
+
+for (my $v = 0; $v < scalar(@variants); $v++){
+     $variantID = $variants[$v];
+     $queryID = $variants[0];
+     $variantID_label = $variant_labels[$v];
+     $queryID_label = $variant_labels[0];
+     system "evince ./testingData_$variantID/MImatrix_$learner"."_$variantID.pdf\n";
 }
 
 
+################################################################
+###  mapping significantly coordinated regions to PDB structure
+################################################################
 
-print("Preparing static display...\n");
-print("close Chimera window to exit\n\n");
-if ($homology eq "loose"){$mutType = "tan";}
-if ($homology eq "strict"){$mutType = "tan";}
-if ($colorScheme eq "c1" ){$colorType = "wb";}
-if ($colorScheme eq "c2" ){$colorType = "wb";}
-$attr = "class";
-$min_val = 0;
-$max_val = 1;
+# select original structure or variant
 
-if ($stype eq "protein"){
-if ($mutType eq "tan"){system("$chimera_path"."chimera --script \"color_by_attr_learnclass_tan.py	--rep=$repStr --test=$testStr --qID=$orig_queryID --rID=$refID --lengthID=$lengthID --cutoff=$cutoffValue --colorType=$colorType --testType=$testStr --attr=$attr --minVal=$min_val --maxVal=$max_val --frameCount=$frameCount\"\n");}
-if ($mutType eq "gray50"){system("$chimera_path"."chimera --script \"color_by_attr_learnclass_gray.py	--rep=$repStr --test=$testStr --qID=$orig_queryID --rID=$refID --lengthID=$lengthID --cutoff=$cutoffValue --colorType=$colorType --testType=$testStr --attr=$attr --minVal=$min_val --maxVal=$max_val --frameCount=$frameCount\"\n");}
-print("\n\n Display complete\n\n");
-}
-
-if ($stype eq "protprot"){
-if ($mutType eq "tan"){system("$chimera_path"."chimera --script \"color_by_attr_learnclass_tan_pp.py	--rep=$repStr --test=$testStr --qID=$orig_queryID --rID=$refID --lengthID=$lengthID --cutoff=$cutoffValue --colorType=$colorType --testType=$testStr --attr=$attr --minVal=$min_val --maxVal=$max_val --frameCount=$frameCount\"\n");}
-if ($mutType eq "gray50"){system("$chimera_path"."chimera --script \"color_by_attr_learnclass_gray_pp.py	--rep=$repStr --test=$testStr --qID=$orig_queryID --rID=$refID --lengthID=$lengthID --cutoff=$cutoffValue --colorType=$colorType --testType=$testStr --attr=$attr --minVal=$min_val --maxVal=$max_val --frameCount=$frameCount\"\n");}
-print("\n\n Display complete\n\n");
-}
-
-if ($stype eq "dna"){
-if ($mutType eq "tan"){system("$chimera_path"."chimera --script \"color_by_attr_learnclass_tan_dp.py	--rep=$repStr --test=$testStr --qID=$orig_queryID --rID=$refID --lengthID=$lengthID --cutoff=$cutoffValue --colorType=$colorType --testType=$testStr --attr=$attr --minVal=$min_val --maxVal=$max_val --frameCount=$frameCount\"\n");}
-if ($mutType eq "gray50"){system("$chimera_path"."chimera --script \"color_by_attr_learnclass_gray_dp.py	--rep=$repStr --test=$testStr --qID=$orig_queryID --rID=$refID --lengthID=$lengthID --cutoff=$cutoffValue --colorType=$colorType --testType=$testStr --attr=$attr --minVal=$min_val --maxVal=$max_val --frameCount=$frameCount\"\n");}
-print("\n\n Display complete\n\n");
-}
-
-if ($stype eq "ligand"){
-if ($mutType eq "tan"){system("$chimera_path"."chimera --script \"color_by_attr_learnclass_tan_lp.py	--rep=$repStr --test=$testStr --qID=$orig_queryID --rID=$refID --lengthID=$lengthID --cutoff=$cutoffValue --colorType=$colorType --testType=$testStr --attr=$attr --minVal=$min_val --maxVal=$max_val --frameCount=$frameCount\"\n");}
-if ($mutType eq "gray50"){system("$chimera_path"."chimera --script \"color_by_attr_learnclass_gray_lp.py	--rep=$repStr --test=$testStr --qID=$orig_queryID --rID=$refID --lengthID=$lengthID --cutoff=$cutoffValue --colorType=$colorType --testType=$testStr --attr=$attr --minVal=$min_val --maxVal=$max_val --frameCount=$frameCount\"\n");}
-print("\n\n Display complete\n\n");
-}    
-     
-#}
+# mapping
 

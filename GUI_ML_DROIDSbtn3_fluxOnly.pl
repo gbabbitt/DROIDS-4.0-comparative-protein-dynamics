@@ -873,7 +873,8 @@ close MUT;
 
 ########################################################################################################
 sleep(1);
-print "Do you want to graph decision spaces for each method at each amino acid site? (y or n)\n\n";
+print "Do you want to graph the two-state molecular dynamics upon the classification space\n";
+print "for each learning method at each amino acid site? (y or n)\n\n";
 print "NOTE: requires python3, numpy, sklearn, and matplotlib installed\n\n";
 
 my $YorN = <STDIN>;

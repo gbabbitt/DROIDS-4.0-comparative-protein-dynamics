@@ -156,12 +156,12 @@ my $seqFrame = $mw->Frame(	-label => "PROTEIN COLOR SCHEME",
 				-relief => "groove",
 				-borderwidth => 2
 				);
-     my $col1Radio = $seqFrame->Radiobutton(-text=>"'stoplight' color scheme = red/green for dFLUX, blue/white for p-value",
+     my $col1Radio = $seqFrame->Radiobutton(-text=>"'stoplight' color scheme = red/green for -/+ change in atom motion",
 						-foreground => 'maroon4',
                               -value=>"c1",
 						-variable=>\$colorScheme
                               );
-	my $col2Radio = $seqFrame->Radiobutton(-text=>"'temperature' color scheme = blue/red for dFLUX, green/white for p-value",
+	my $col2Radio = $seqFrame->Radiobutton(-text=>"'temperature' color scheme = blue/red for -/+ change in atom motion",
 						-foreground => 'maroon4',
                               -value=>"c2",
 						-variable=>\$colorScheme
@@ -290,9 +290,9 @@ $mlButton->pack(-side=>"bottom",
 $seriesButton->pack(-side=>"bottom",
 			-anchor=>"s"
 			);
-$playCHXbutton->pack(-side=>"bottom",
-			-anchor=>"s"
-			);
+#$playCHXbutton->pack(-side=>"bottom",
+#			-anchor=>"s"
+#			);
 $playButton->pack(-side=>"bottom",
 			-anchor=>"s"
 			);
@@ -441,13 +441,14 @@ my @valuesList = "";
 open(INPUT, "<"."$input_folder/$input_file") or die "Could not find $input_file";
  my @IN = <INPUT>;
  my @OUTrows;
- for (my $a = 1; $a < scalar @IN; $a++) {
+ for (my $a = 0; $a <= scalar @IN + 1; $a++) {
 	
     my $INrow = $IN[$a];
 	my @INrow = split (/\s+/, $INrow);
-	my $index = $INrow[0] - ($startN - 1);
+	my $index = $INrow[0] - ($startN);
 	my $value = $INrow[$relevant_column];
 	#print $value;
+	if($value == int $value || $value eq ''){$value = $value + 0.0001;}
 	$valuesList[$a] = $value;
 	$index = int $index;
 #	if ($attr eq "pval" and $value > $cutoffValue) {
@@ -511,12 +512,47 @@ print("\n\n Movies rendered\n");
 ############################################################################################################
 
 sub display{
-print("Preparing static display...\n");
-print("close Chimera window to exit\n\n");
-print("ignore MD movie window unless you want to make a custom movie\n\n");
-if ($mutType eq "tan"){system("$chimera_path"."chimera --script \"color_by_attr_tan_lp.py	--rep=$repStr --test=$testStr --qID=$queryID --rID=$refID --lengthID=$lengthID --cutoff=$cutoffValue --colorType=$colorType --testType=$testStr --attr=$attr --minVal=$min_val --maxVal=$max_val --frameCount=$frameCount\"\n");}
-if ($mutType eq "gray50"){system("$chimera_path"."chimera --script \"color_by_attr_gray_lp.py	--rep=$repStr --test=$testStr --qID=$queryID --rID=$refID --lengthID=$lengthID --cutoff=$cutoffValue --colorType=$colorType --testType=$testStr --attr=$attr --minVal=$min_val --maxVal=$max_val --frameCount=$frameCount\"\n");}
-print("\n\n Display complete\n\n");
+
+print("Preparing display...\n");
+print("close ChimeraX program to exit\n\n");
+# copy visualization support files to folder
+mkdir("ChimeraXvis");
+copy("$queryID"."REDUCED.pdb", "ChimeraXvis/query.pdb");
+copy("$refID"."REDUCED.pdb", "ChimeraXvis/reference.pdb");
+if($attr eq "gdist"){copy("./attribute_files/$output_file", "ChimeraXvis/attributeGD.dat");}
+if($attr eq "dval"){copy("./attribute_files/$output_file", "ChimeraXvis/attributeDV.dat");}
+if($attr eq "pval"){copy("./attribute_files/$output_file", "ChimeraXvis/attributePV.dat");}
+if($attr eq "delta"){copy("./attribute_files/$output_file", "ChimeraXvis/attributeAVG.dat");}
+if($attr eq "deltaKL"){copy("./attribute_files/$output_file", "ChimeraXvis/attributeKL.dat");}
+# create control file for visualization
+open(CTL, ">"."ChimeraXvis.ctl");
+print CTL "model\t"."#1\n";
+#print CTL "chain\t"."/$chainMAP\n";
+print CTL "structure\t"."ChimeraXvis/reference.pdb\n";
+print CTL "structureADD\t"."ChimeraXvis/query.pdb\n";
+if($attr eq "gdist"){print CTL "attr_file\t"."ChimeraXvis/attributeGD.dat\n"; print CTL "attr\t"."gdist\n"; print CTL "palette\t"."Oranges-5\n";}
+if($attr eq "dval"){print CTL "attr_file\t"."ChimeraXvis/attributeDV.dat\n"; print CTL "attr\t"."dval\n"; print CTL "palette\t"."Greens-5\n";}
+if($attr eq "pval"){print CTL "attr_file\t"."ChimeraXvis/attributePV.dat\n"; print CTL "attr\t"."pval\n"; print CTL "palette\t"."RdGy-5\n";}
+if($attr eq "delta" && $colorScheme eq "c1"){print CTL "attr_file\t"."ChimeraXvis/attributeAVG.dat\n"; print CTL "attr\t"."delta\n"; print CTL "palette\t"."RdYlGn\n";}
+if($attr eq "deltaKL" && $colorScheme eq "c1"){print CTL "attr_file\t"."ChimeraXvis/attributeKL.dat\n"; print CTL "attr\t"."deltaKL\n"; print CTL "palette\t"."RdYlGn\n";}
+if($attr eq "delta" && $colorScheme eq "c2"){print CTL "attr_file\t"."ChimeraXvis/attributeAVG.dat\n"; print CTL "attr\t"."delta\n"; print CTL "palette\t"."bluered\n";}
+if($attr eq "deltaKL" && $colorScheme eq "c2"){print CTL "attr_file\t"."ChimeraXvis/attributeKL.dat\n"; print CTL "attr\t"."deltaKL\n"; print CTL "palette\t"."bluered\n";}
+print CTL "length\t"."$lengthID\n";
+print CTL "minval\t"."$min_val\n";
+print CTL "maxval\t"."$max_val\n";
+if($repStr ne "surface"){print CTL "lighting\t"."simple\n";}
+if($repStr eq "surface"){print CTL "lighting\t"."full\n";}
+if($repStr eq "ribbon"){print CTL "transparency\t"."85\n";}
+if($repStr eq "ribbonsurface"){print CTL "transparency\t"."50\n";}
+if($repStr eq "surface"){print CTL "transparency\t"."0\n";}
+print CTL "background\t"."gray\n";
+close CTL;
+#################################
+# system call ChimeraX
+#system "$chimerax_path"."ChimeraX color_by_attr_chimerax_protein.py\n";
+#system "$chimerax_path"."ChimeraX color_by_attr_chimerax_protprot.py\n";
+#system "$chimerax_path"."ChimeraX color_by_attr_chimerax_dna.py\n";	
+system "$chimerax_path"."ChimeraX color_by_attr_chimerax_ligand.py\n";
 
 }
 

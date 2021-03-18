@@ -5,17 +5,11 @@
         size: root.width-200, root.height-200
         pos: 100, 100
         Label:
-            text: 'maxDemon - classification of functionally conserved dynamics'
+            text: 'maxDemon - genetic/drug impacts on functionally conserved dynamics'
             font_size: 24
             size_hint: 0.5, 0.2
             bold: True
             color: 0.1, 0.85, 0.85, 1
-        Label:
-            text: 'and significant impacts of genetic/drug variants'
-            font_size: 24
-            size_hint: 0.5, 0.2
-            bold: True
-            color: 0.1, 0.85, 0.85, 1    
         Label:
             text: 'GPL3 license - GA Babbitt Lab at Rochester Institute of Technology'
             font_size: 16
@@ -134,7 +128,7 @@
                     on_release: btn3.background_color=(0.9, 0.1, 0.1, 1)
                 Button:
                     id: btn4
-                    text: "(4) calc conserved dynamics+impacts"   
+                    text: "(4) calc/map conserved dynamics"   
                     on_press: root.btn4()
                     background_color: 0.1, 0.9, 0.9, 1
                     on_release: btn4.background_color=(0.9, 0.1, 0.1, 1)
@@ -148,13 +142,13 @@
                     size_hint: 0.3, 0.1
                 Button:
                     id: btn5
-                    text: "(5) map conserved dynamics to structure"
+                    text: "(5) calc/map coordinated dynamics"
                     on_press: root.btn5()
                     background_color: 0.1, 0.9, 0.9, 1
                     on_release: btn5.background_color=(0.9, 0.1, 0.1, 1)
                 Button:
                     id: btn6
-                    text: "(6) render movies of learning process"   
+                    text: "(6) calc/map genetic/drug impacts"   
                     on_press: root.btn6()
                     background_color: 0.1, 0.9, 0.9, 1
                     on_release: btn6.background_color=(0.9, 0.1, 0.1, 1)
@@ -168,7 +162,7 @@
                     size_hint: 0.3, 0.1
                 Button:
                     id: btn7
-                    text: "(7) map significant genetic/drug impact"   
+                    text: "(7) render movies of learning process"   
                     on_press: root.btn7()
                     background_color: 0.1, 0.9, 0.9, 1
                     on_release: btn7.background_color=(0.9, 0.1, 0.1, 1)

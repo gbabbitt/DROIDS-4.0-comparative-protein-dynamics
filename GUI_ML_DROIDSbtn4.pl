@@ -37,9 +37,11 @@ for (my $i = 0; $i < scalar @IN; $i++){
 	 my $header = @INrow[0];
 	 my $path = @INrow[1];
 	 if ($header eq "chimera_path"){$chimera_path = $path;}
+	 if ($header eq "chimerax_path"){$chimerax_path = $path;}
 }
 close IN;
 print "path to Chimera .exe\t"."$chimera_path\n";
+print "path to ChimeraX .exe\t"."$chimerax_path\n";
 
 #### This uses a GUI to write the control files needed for the DROIDS scripts ####
 print "\n\nWelcome to DROIDS- Detecting Relative Outlier Impacts
@@ -98,8 +100,6 @@ close IN2;
 
 ###########################################################################################################
 ###########################################################################################################
-#####################################################
-#sub canon{
 
 # prompt user - choose graphing option
 sleep(1);
@@ -812,172 +812,226 @@ for (my $v = 0; $v < scalar(@variants); $v++){
 if(scalar(@variants) >= 4){system "gedit ./maxDemon_results/ANOVAresult.txt\n";}
 #}
 
+###################################################
+##  mapping conserved dynamics to PDB structure
+###################################################
 
-###########################################
-###########################################
+use Tk;
+use Tk::PNG;
+use Tk::JPEG;
+use Tk::Photo;
+#use strict;
+#use warnings;
+use feature ":5.10";
+use File::Copy;
+use File::Path;
+use List::Util qw( min );
+use List::Util qw( max );
+use List::Util qw(min max);
+use Statistics::Descriptive();
 
-# prompt user - selest machine learner for MI matrix
-sleep(1);print "CHOOSE BEST LEARNER FOR MUTUAL INFORMATION MATRIX (type 'KNN', 'NB', 'LDA', 'QDA', 'SVM', 'RFOR' or 'ADA')\n\n";
-my $learner = <STDIN>;
-chop($learner);
+# collect frame data
+open (IN, "<"."MDframes.ctl") || die "could not open frames ctl file\n";
+my @IN = <IN>;
+for (my $i = 0; $i < scalar @IN; $i++){
+	 my $INrow = $IN[$i];
+	 my @INrow = split (/\s+/, $INrow);
+	 my $header = @INrow[0];
+	 my $value = @INrow[1];
+	 if ($header eq "framenumber"){$framenumber = $value;}
+      if ($header eq "framestep"){$framestep = $value;}
+      if ($header eq "framegroups"){$framegroups = $value;}
+      if ($header eq "framegrpfactor"){$framefactor = $value;}
+}
+close IN;
 
-for (my $v = 0; $v < scalar(@variants); $v++){
-     $variantID = $variants[$v];
-     $queryID = $variants[0];
-     $variantID_label = $variant_labels[$v];
-     $queryID_label = $variant_labels[0];
+$frameCount = $framenumber;
 
-# initialize     
-$residue1 = 0;
-$residue2 = 0;
-$MI = 0;
-# open MI matrix files
-open(MI, ">"."./testingData_$variantID/MIcolumn_$learner"."_$variantID.txt") or die "could not open MI matrix file for $variantID \n";    
-print MI "pos1\t"."pos2\t"."MI\n";
-open(MI2, ">"."./testingData_$variantID/MImatrix_$learner"."_$variantID.txt") or die "could not open MI matrix file for $variantID \n";    
-#print MI2 "residue\t";
-#for (my $n = 0; $n < $lengthID; $n++){print MI2 "$n\t";}
-#print MI2 "\n";
- 
+# specify the path to working directory for Chimera here
+open(IN, "<"."paths.ctl") or die "could not find paths.txt file\n";
+my @IN = <IN>;
+for (my $i = 0; $i < scalar @IN; $i++){
+	 my $INrow = $IN[$i];
+	 my @INrow = split (/\s+/, $INrow);
+	 my $header = @INrow[0];
+	 my $path = @INrow[1];
+	 if ($header eq "chimera_path"){$chimera_path = $path;}
+	 if ($header eq "chimerax_path"){$chimerax_path = $path;}
+}
+close IN;
+print "path to Chimera .exe\t"."$chimera_path\n";
+print "path to ChimeraX .exe\t"."$chimerax_path\n";
+
+#### This uses a GUI to write the control files needed for the DROIDS scripts ####
+print "\n\nWelcome to DROIDS- Detecting Relative Outlier Impacts
+                          in Dynamic Simulations
+
+- visual toolbox for functional evolutionary comparison
+  of molecular dynamic simulation \n\n";
+
+#### Declare variables ####
+my $queryID = '';
+my $refID = '';
+my $lengthID = '';
+my $testStr = '';
+my $cutoffValue = '';
+my $homology = '';
+my $chainN = '';
+
+
+# read control files
+open(IN, "<"."DROIDS.ctl") or die "could not find DROIDS.ctl file\n";
+my @IN = <IN>;
+for (my $i = 0; $i < scalar @IN; $i++){
+	 my $INrow = $IN[$i];
+	 my @INrow = split (/\s+/, $INrow);
+	 my $header = @INrow[0];
+	 my $value = @INrow[1];
+	 if ($header eq "query"){$queryID = $value;}
+      if ($header eq "reference"){$refID = $value;}
+      if ($header eq "length"){$lengthID = $value;}
+      #if ($header eq "start"){$startN = $value;}
+      if ($header eq "cutoff_value"){$cutoffValue = $value;}
+      if ($header eq "test_type"){$testStr = $value;}
+      if ($header eq "representations"){$repStr = $value;}
+      if ($header eq "homology"){$homology = $value;}
+      if ($header eq "num_chains"){$chainN = $value;}
+      #if ($header eq "color_scheme"){$colorType = $value;}
+}
+close IN;
+
+
+$colorScheme = "c1";
+
+open(IN2, "<"."MDr.ctl") or die "could not find MDr.ctl file\n";
+my @IN2 = <IN2>;
+for (my $i = 0; $i < scalar @IN2; $i++){
+	 my $INrow = $IN2[$i];
+	 my @INrow = split (/\s+/, $INrow);
+	 my $header = @INrow[0];
+	 my $value = @INrow[1];
+	 if ($header eq "Number_Runs"){$number_runs = $value;}
+}
+close IN2;
+
+
+
+
+sleep(1);print "\nSELECT INTERACTION TYPE FOR MAPPING (1=protein only | 2=protein-protein | 3=DNA-protein | 4=protein-ligand)\n\n";
+my $stype_number = <STDIN>;
+chop($stype_number);
+
+if($stype_number == 1){$stype = "protein";}
+if($stype_number == 2){$stype = "protprot";}
+if($stype_number == 3){$stype = "dna";}
+if($stype_number == 4){$stype = "ligand";}
+
+if($stype eq "dna" || $stype eq "ligand"){$orig_queryID = $queryID; $queryID = $refID;}
+
+# enforce orig $queryID from training set
+print "queryID label is "."$queryID\n";
+if($queryID =~ m/_1_1/){$queryID = substr($queryID, 0, length($queryID)-4);}
+if($queryID =~ m/_1/){$queryID = substr($queryID, 0, length($queryID)-2);}
+print "queryID label is adjusted to "."$queryID\n";
+$orig_queryID = $queryID;  # create tag for original query in training set
+$queryID = "$queryID"."_1"; # set query to first copy for this subroutine
+print "queryID label is adjusted to "."$queryID\n\n\n";
+
+print "\nEnter chain ID where color map should start (default = A)\n";
+   print "i.e. color map only to homologous parts of bound and unbound
+   structure\n";
+   $chainMAP = <STDIN>;
+   chop($chainMAP);
+   if ($chainMAP eq ''){$chainMAP = 'A';}
+
+if($stype eq 'dna' || $stype eq 'ligand' || $stype eq 'protprot' || $stype eq 'protein'){
+   print "\nEnter number position of N terminal on this chain (default = 0)\n";
+   $offset = <STDIN>;
+   chop($offset);
+   $offset = $offset-2;
+   if ($offset eq ''){$offset = 0;}
+   }
+
+
+
+# create mask for signif Wilks lamda
+open(OUT, ">"."./testingData_$queryID/adj_vertpvals_$queryID.txt")||die "could not create mask file /testingData_$queryID/adj_vertpvals_$queryID.txt\n";  
+open(IN, "<"."./testingData_$queryID/adj_pvals_$queryID.txt")||die "could not open mask file /testingData_$queryID/adj_pvals_$queryID.txt\n";  
+my @IN = <IN>;
+for (my $i = 0; $i < scalar @IN; $i++) {
+	$INrow = $IN[$i];
+     @INrow = split(/] /, $INrow);
+	$trunINrow = $INrow[1];
+     #print OUT "$trunINrow";
+     @trunINrow = split(/\s+/, $trunINrow);
+     for (my $ii = 0; $ii < scalar(@trunINrow); $ii++){
+     $value = $trunINrow[$ii];
+     print OUT "$value\n";
+     }
+     }
+close IN;
+close OUT;
+
+# make learned class attribute files for image rendering
+  open(OUT, ">"."./attribute_files/classATTR_$refID"."_mask".".dat")||die "could not create ATTR time series file\n";
+  #if ($stype ne "protprot"){open(OUT, ">"."./attribute_files/classATTR_$refID"."_mask".".dat")||die "could not create ATTR time series file\n";}  
+  #if ($stype eq "protprot"){open(OUT, ">"."./attribute_files/classATTR_$orig_queryID"."_mask".".dat")||die "could not create ATTR time series file\n";}  
+  print OUT "recipient: residues\n";
+  print OUT "attribute: class\n";
+  print OUT "\n";
+  
+   for (my $a = 0; $a < $lengthID+$offset+1; $a++){
+   if ($a eq '' || $a <= $offset){next;}
+   open(IN, "<"."./testingData_$queryID/adj_vertpvals_$queryID.txt")||die "could not open mask file /testingData_$queryID/adj_vertpvals_$queryID.txt\n";  
+    my @IN = <IN>;
+   $INrow = $IN[$a-$offset];
+    @INrow = split(/\s+/, $INrow);
+    $maskvalue = $INrow[0];
    
-print "\ncalculating mutual information matrix for $variantID \n";     
+     #print "$a\t"."$frame\t"."$value\n";
+     $pos = $a+1;
+     if ($maskvalue == 1){print OUT "\t:"."$pos\t"."1\n";}
+     #if ($f == $frame && $maskvalue == 1){print OUT "\t:"."$pos\t"."1\n";} # to test mask positioning
+     if ($maskvalue == 0){print OUT "\t:"."$pos\t"."0\n";}
+     
+ 
+ close IN;
+ }
+ close OUT;
+
+print "\n class attribute files for all frames are created\n";
 sleep(1);
-
-for (my $i = 1; $i < $lengthID; $i++){
-	 $residue1 = $i;
-      print "calculating MI values for residue\t"."$residue1 for $variantID\n";
-      open(POS1, "<"."./testingData_$variantID/indAAclass$learner/position_$i.txt") or die "could not open MI matrix file for ./testingData_$variantID/indAAclass$learner/position_$i.txt \n";    
-      my @POS1 = <POS1>;
-      if($i>0){print MI2 "\n";}
-      #if($i==0){print MI2 "$residue1\t";}
-      #if($i>0){print MI2 "\n"; print MI2 "$residue1\t";}
-      for (my $j = 1; $j < $lengthID; $j++){
-	     open(POS2, "<"."./testingData_$variantID/indAAclass$learner/position_$j.txt") or die "could not open MI matrix file for ./testingData_$variantID/indAAclass$learner/position_$j.txt \n";    
-          my @POS2 = <POS2>;
-          $residue2 = $j;
-          
-          #calculate freq A
-          #print "calculating freq state A\t";
-          $freqA = 0;
-          $sumclassA = 0;
-          $cntA = 0;
-          for (my $ii = 0; $ii < scalar @POS1; $ii++){
-              my $POS1row = $POS1[$ii];
-              my @POS1row = split (/\s+/, $POS1row);
-	         $class1 = $POS1row[0];
-              $time1 = $ii;
-              if($class1 == 0 || $class1 == 0.5 || $class1 == 1) {$sumclassA = $sumclassA+$class1; $cntA = $cntA+1;}
-              #print "Residue1\t"."$residue1\t"."timeslice\t"."$time1\t"."class = "."$class1\n";
-              }
-              $freqA = $sumclassA/($cntA+0.0001);
-              #print "freqA = "."$freqA\n";
-          
-          #calculate freq B
-          #print "calculating freq state B\t";
-          $freqB = 0;
-          $sumclassB = 0;
-          $cntB = 0;
-          for (my $jj = 0; $jj < scalar @POS2; $jj++){
-              my $POS2row = $POS2[$jj];
-              my @POS2row = split (/\s+/, $POS2row);
-	         $class2 = $POS2row[0];
-              $time2 = $jj;
-              if($class2 == 0 || $class2 == 0.5 || $class2 == 1) {$sumclassB = $sumclassB+$class2; $cntB = $cntB+1;}
-              #print "Residue2\t"."$residue2\t"."timeslice\t"."$time2\t"."class = "."$class2\n";
-              }
-              $freqB = $sumclassB/($cntB+0.0001);
-              #print "freqB = "."$freqB\n";
-          
-          #calculate freq A and B
-          #print "calculating freq state A and B\t";
-          $freqAB = 0;
-          $sumclassAB = 0;
-          $cntAB = 0;
-          for (my $ii = 0; $ii < scalar @POS1; $ii++){
-              my $POS1row = $POS1[$ii];
-              my @POS1row = split (/\s+/, $POS1row);
-	         $class1 = $POS1row[0];
-              $time1 = $ii;
-              #if($class1 == 0 || $class1 == 0.5 || $class1 == 1) {$sumclassA = $sumclassA+$class1; $cntA = $cntA+1;}
-              #print "Residue1\t"."$residue1\t"."timeslice\t"."$time1\t"."class = "."$class1\n";
-              for (my $jj = 0; $jj < scalar @POS2; $jj++){
-              my $POS2row = $POS2[$jj];
-              my @POS2row = split (/\s+/, $POS2row);
-	         $class2 = $POS2row[0];
-              $time2 = $jj;
-              if($time1 ==$time2 && $class1 == $class2) {$sumclassAB = $sumclassAB+1; $cntAB = $cntAB+1;}
-              if($time1 ==$time2 && $class1 != $class2) {$cntAB = $cntAB+1;}
-              #print "Residue2\t"."$residue2\t"."timeslice\t"."$time2\t"."class = "."$class2\n";
-              }
-              }
-              $freqAB = $sumclassAB/($cntAB+0.0001);
-              #print "freqAB = "."$freqAB\n";
-                    
-          # calculate MI
-          $MI = $freqAB*log(($freqAB+0.0001)/(($freqA*$freqB)+0.0001));
-          if ($MI>1){$MI = 1;}
-          #print "MImatrix\t"."$residue1\t"."$residue2\t"."$MI\n";
-          print MI "$residue1\t"."$residue2\t"."$MI\n";
-          print MI2 "$MI\t";
-      }
-}
-
-close MI;
-close MI2;
-
-print "\nheatmapping mutual information matrix for $variantID (close .pdf to continue)\n";     
-sleep(1);
-
-open (Rinput, "| R --vanilla")||die "could not start R command line\n";
-print Rinput "datamatrixMI = read.table('./testingData_$variantID/MImatrix_$learner"."_$variantID.txt', header = FALSE)\n";
-#print Rinput "print(datamatrixMI)\n";
-print Rinput "datamatrixMI<-as.matrix(datamatrixMI)\n";
-print Rinput "myMImean <- mean(datamatrixMI)\n";
-print Rinput "myMImean <- round(myMImean, digits=4)\n";
-print Rinput "print(myMImean)\n";
-print Rinput "myMIsd <- sd(datamatrixMI)\n";
-print Rinput "myMIsd <- round(myMIsd, digits=4)\n";
-print Rinput "print(myMIsd)\n";
-#print Rinput "print(datamatrixMI)\n";
-#print Rinput "datamatrixMI <- scale(datamatrixMI)\n";
-#print Rinput "mymap1<-heatmap(datamatrixMI, Colv = 'Rowv', symm = TRUE, keep.dendro = FALSE)\n";
-#print Rinput "print(mymap1)\n";
-print Rinput "x <- (1:nrow(datamatrixMI))\n";
-print Rinput "y <- (1:ncol(datamatrixMI))\n";
-print Rinput "mymap2<-image(x+$startN, y+$startN, datamatrixMI, col = gray.colors(20), main = c('MUTUAL INFORMATION for $variantID (lighter = higher))', paste('mean MI = ', myMImean, 'sd MI = ', myMIsd)), xlab = 'residue position', ylab = 'residue position')\n";
-print Rinput "print(mymap2)\n";      
-# write to output file and quit R
-print Rinput "q()\n";# quit R 
-print Rinput "n\n";# save workspace image?
-close Rinput;
-print "\n\n";
-print " copying plot\n\n";
-sleep(1);
-my $oldfilename = "Rplots.pdf";
-my $newfilename = "./testingData_$variantID/MImatrix_$learner"."_$variantID.pdf";
-my $newfilename2 = "./maxDemon_results/MImatrix_$learner"."_$variantID.pdf";
-copy($oldfilename, $newfilename);
-copy($oldfilename, $newfilename2);
-my $oldfilename3 = "./testingData_$variantID/MImatrix_$learner"."_$variantID.txt";
-my $newfilename3 = "./maxDemon_results/MImatrix_$learner"."_$variantID.txt";
-copy($oldfilename3, $newfilename3);
-my $oldfilename4 = "./testingData_$variantID/MIcolumn_$learner"."_$variantID.txt";
-my $newfilename4 = "./maxDemon_results/MIcolumn_$learner"."_$variantID.txt";
-copy($oldfilename4, $newfilename4);
-print " mutual information matrix is complete\n\n";
-print " close PDF and txt viewer to continue\n\n";
-
-
-} # end for loop
-
-for (my $v = 0; $v < scalar(@variants); $v++){
-     $variantID = $variants[$v];
-     $queryID = $variants[0];
-     $variantID_label = $variant_labels[$v];
-     $queryID_label = $variant_labels[0];
-     system "evince ./testingData_$variantID/MImatrix_$learner"."_$variantID.pdf\n";
-}
-
+###############################################################
+print("Preparing display...\n");
+print("close ChimeraX program to exit\n\n");
+# copy visualization support files to folder
+mkdir("ChimeraXvis");
+copy("$queryID"."REDUCED.pdb", "ChimeraXvis/query.pdb");
+copy("$refID"."REDUCED.pdb", "ChimeraXvis/reference.pdb");
+copy("./attribute_files/classATTR_$refID"."_mask".".dat", "ChimeraXvis/attributeCLASS.dat");
+# create control file for visualization
+open(CTL, ">"."ChimeraXvis.ctl");
+print CTL "model\t"."#1\n";
+print CTL "chain\t"."/$chainMAP\n";
+print CTL "structure\t"."ChimeraXvis/reference.pdb\n";
+print CTL "structureADD\t"."ChimeraXvis/query.pdb\n";
+print CTL "attr_file\t"."ChimeraXvis/attributeCLASS.dat\n";
+print CTL "length\t"."$lengthID\n";
+print CTL "attr\t"."class\n";
+print CTL "minval\t"."0\n";
+print CTL "maxval\t"."1\n";
+print CTL "palette\t"."Greys-5\n";
+print CTL "lighting\t"."simple\n";
+print CTL "transparency\t"."50\n";
+print CTL "background\t"."gray\n";
+close CTL;
+##############################################################
+# system call ChimeraX
+if ($stype eq "protein"){system "$chimerax_path"."ChimeraX color_by_attr_chimerax_protein.py\n";}
+if ($stype eq "protprot"){system "$chimerax_path"."ChimeraX color_by_attr_chimerax_protprot.py\n";}
+if ($stype eq "dna"){system "$chimerax_path"."ChimeraX color_by_attr_chimerax_dna.py\n";}	
+if ($stype eq "ligand"){system "$chimerax_path"."ChimeraX color_by_attr_chimerax_ligand.py\n";}
+	
 ###########################################################################################################
 ###########################################################################################################
 
