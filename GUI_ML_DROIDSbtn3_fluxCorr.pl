@@ -138,13 +138,20 @@ sleep(3);
 
 mkdir("maxDemon_results");
 
+sleep(1);print "CHOOSE TRAINING SET RANDOM SUBSAMPLING OPTION (type 'y' or 'n')\n";
+print "if y, training sets will be fixed to n=20,000 time slices sampled with replacement\n";
+print "note: use this option if machine learning is too slow (esp SVM and adaboost)\n\n";
+my $sampletype_enter = <STDIN>;
+chop($sampletype_enter);
+if($sampletype_enter eq 'y' || $sampletype_enter eq 'Y'){$sampletype = 'y';}
+if($sampletype_enter eq 'n' || $sampletype_enter eq 'Y'){$sampletype = 'n';}
+if($sampletype_enter eq ''){$sampletype = 'n';}
+
 if ($method_kern == 1 || $method_other == 1){
 # prompt user - choose best learning model to display
-sleep(1);print "CHOOSE KERNEL TYPE FOR SVM (type 'linear', 'polynomial', 'laplace' or 'RBF')\n\n";
+sleep(1);print "CHOOSE KERNEL TYPE FOR SVM (type 'linear', 'polynomial', or 'RBF')\n\n";
 my $kerntype_enter = <STDIN>;
 chop($kerntype_enter);
-if ($kerntype_enter eq ''){$kerntype_enter = 'linear';}
-
 if($kerntype_enter eq 'linear'){$kerntype = 'vanilladot';}
 if($kerntype_enter eq 'polynomial'){$kerntype = 'polydot';}
 if($kerntype_enter eq 'laplace'){$kerntype = 'laplacedot';}
@@ -293,6 +300,7 @@ if ($method_dist == 1){
    print Rinput "library(ggplot2)\n";
    print Rinput "library(class)\n";
    print Rinput "library(e1071)\n";
+			print Rinput "library(dplyr)\n";
    # read data into R
    print Rinput "dataT = read.table('trainingData/position$r', header = TRUE)\n";
    print Rinput "dataD = read.table('testingData_$fileIDq/position$r', header = TRUE)\n";
@@ -305,6 +313,13 @@ if ($method_dist == 1){
    print Rinput "print(head(train))\n";
    print Rinput "print(head(test))\n";
    print Rinput "xy <- data.frame(class, train)\n";
+			print Rinput "print('dimension of training set')\n";
+			print Rinput "dim(xy)\n";
+			if($sampletype eq 'y'){  # subsample training set option
+			   print Rinput "xy <- sample_n(xy, 20000, replace = TRUE)\n";	  
+			   print Rinput "print('new dimension of training set')\n";
+			   print Rinput "dim(xy)\n";
+			   }
    print Rinput "nb.xy   <- naiveBayes(as.factor(class)~., data=xy)\n";
    print Rinput "nb.pred <- predict(nb.xy, as.data.frame(test), type='class')\n";
    print Rinput "my_zero <- sum(nb.pred == 0)\n";
@@ -340,6 +355,7 @@ if ($method_dist == 1){
    print Rinput "library(ggplot2)\n";
    print Rinput "library(class)\n";
    print Rinput "library(MASS)\n";
+			print Rinput "library(dplyr)\n";
    # read data into R
    print Rinput "dataT = read.table('trainingData/position$r', header = TRUE)\n";
    print Rinput "dataD = read.table('testingData_$fileIDq/position$r', header = TRUE)\n";
@@ -352,6 +368,13 @@ if ($method_dist == 1){
    print Rinput "print(head(train))\n";
    print Rinput "print(head(test))\n";
    print Rinput "xy <- data.frame(class, train)\n";
+			print Rinput "print('dimension of training set')\n";
+			print Rinput "dim(xy)\n";
+			if($sampletype eq 'y'){  # subsample training set option
+			   print Rinput "xy <- sample_n(xy, 20000, replace = TRUE)\n";	  
+			   print Rinput "print('new dimension of training set')\n";
+			   print Rinput "dim(xy)\n";
+			   }
    print Rinput "lda.xy   <- lda(as.factor(class)~., data=xy)\n";
    print Rinput "lda.pred <- predict(lda.xy, as.data.frame(test))\$class\n";
    print Rinput "my_zero <- sum(lda.pred == 0)\n";
@@ -386,6 +409,7 @@ if ($method_dist == 1){
    print Rinput "library(ggplot2)\n";
    print Rinput "library(class)\n";
    print Rinput "library(MASS)\n";
+			print Rinput "library(dplyr)\n";
    # read data into R
    print Rinput "dataT = read.table('trainingData/position$r', header = TRUE)\n";
    print Rinput "dataD = read.table('testingData_$fileIDq/position$r', header = TRUE)\n";
@@ -398,6 +422,13 @@ if ($method_dist == 1){
    print Rinput "print(head(train))\n";
    print Rinput "print(head(test))\n";
    print Rinput "xy <- data.frame(class, train)\n";
+			print Rinput "print('dimension of training set')\n";
+			print Rinput "dim(xy)\n";
+			if($sampletype eq 'y'){  # subsample training set option
+			   print Rinput "xy <- sample_n(xy, 20000, replace = TRUE)\n";	  
+			   print Rinput "print('new dimension of training set')\n";
+			   print Rinput "dim(xy)\n";
+			   }
    print Rinput "qda.xy   <- qda(as.factor(class)~., data=xy)\n";
    print Rinput "qda.pred <- predict(qda.xy, as.data.frame(test))\$class\n";
    print Rinput "my_zero <- sum(qda.pred == 0)\n";
@@ -433,7 +464,8 @@ if ($method_kern == 1){
    print Rinput "library(ggplot2)\n";
    print Rinput "library(class)\n";
    print Rinput "library(kernlab)\n";
-   # read data into R
+			print Rinput "library(dplyr)\n";
+			# read data into R
    print Rinput "dataT = read.table('trainingData/position$r', header = TRUE)\n";
    print Rinput "dataD = read.table('testingData_$fileIDq/position$r', header = TRUE)\n";
    print Rinput "class <- dataT\$class\n"; # training class
@@ -445,9 +477,16 @@ if ($method_kern == 1){
    print Rinput "print(head(train))\n";
    print Rinput "print(head(test))\n";
    print Rinput "xy <- data.frame(class, train)\n";
-   print Rinput "svm.xy   <- ksvm(as.factor(class)~., data=xy, kernel='$kerntype',C=2, cross=5)\n";
+			print Rinput "print('dimension of training set')\n";
+			print Rinput "dim(xy)\n";
+			if($sampletype eq 'y'){  # subsample training set option
+			   print Rinput "xy <- sample_n(xy, 20000, replace = TRUE)\n";	  
+			   print Rinput "print('new dimension of training set')\n";
+			   print Rinput "dim(xy)\n";
+			   }
+			print Rinput "svm.xy   <- ksvm(as.factor(class)~., data=xy, kernel='$kerntype',C=2, cross=5)\n";
    print Rinput "svm.pred <- predict(svm.xy, as.data.frame(test), type='response')\n";
-   print Rinput "my_zero <- sum(svm.pred == 0)\n";
+			print Rinput "my_zero <- sum(svm.pred == 0)\n";
    print Rinput "my_one <- sum(svm.pred == 1)\n";
    print Rinput "my_freq <- my_zero/(my_zero + my_one)\n";
    print Rinput "print(my_freq)\n";
@@ -480,7 +519,8 @@ if ($method_ens == 1){
    print Rinput "library(ggplot2)\n";
    print Rinput "library(class)\n";
    print Rinput "library(randomForest)\n";
-   # read data into R
+			print Rinput "library(dplyr)\n";
+			# read data into R
    print Rinput "dataT = read.table('trainingData/position$r', header = TRUE)\n";
    print Rinput "dataD = read.table('testingData_$fileIDq/position$r', header = TRUE)\n";
    print Rinput "class <- dataT\$class\n"; # training class
@@ -492,9 +532,16 @@ if ($method_ens == 1){
    print Rinput "print(head(train))\n";
    print Rinput "print(head(test))\n";
    print Rinput "xy <- data.frame(class, train)\n";
-   print Rinput "rf.xy <- randomForest(as.factor(class)~., data=xy, ntree=500)\n";
+			print Rinput "print('dimension of training set')\n";
+			print Rinput "dim(xy)\n";
+			if($sampletype eq 'y'){  # subsample training set option
+			   print Rinput "xy <- sample_n(xy, 20000, replace = TRUE)\n";	  
+			   print Rinput "print('new dimension of training set')\n";
+			   print Rinput "dim(xy)\n";
+			   }
+			print Rinput "rf.xy <- randomForest(as.factor(class)~., data=xy, ntree=500)\n";
    print Rinput "rf.pred <- predict(rf.xy, as.data.frame(test), type='response')\n";
-   print Rinput "my_zero <- sum(rf.pred == 0)\n";
+			print Rinput "my_zero <- sum(rf.pred == 0)\n";
    print Rinput "my_one <- sum(rf.pred == 1)\n";
    print Rinput "my_freq <- my_zero/(my_zero + my_one)\n";
    print Rinput "print(my_freq)\n";
@@ -527,7 +574,8 @@ if ($method_ens == 1){
    print Rinput "library(ggplot2)\n";
    print Rinput "library(class)\n";
    print Rinput "library(ada)\n";
-   # read data into R
+			print Rinput "library(dplyr)\n";
+			# read data into R
    print Rinput "dataT = read.table('trainingData/position$r', header = TRUE)\n";
    print Rinput "dataD = read.table('testingData_$fileIDq/position$r', header = TRUE)\n";
    print Rinput "class <- dataT\$class\n"; # training class
@@ -539,9 +587,16 @@ if ($method_ens == 1){
    print Rinput "print(head(train))\n";
    print Rinput "print(head(test))\n";
    print Rinput "xy <- data.frame(class, train)\n";
-   print Rinput "boost.xy <- ada(as.factor(class)~., data=xy, 18)\n";
+			print Rinput "print('dimension of training set')\n";
+			print Rinput "dim(xy)\n";
+			if($sampletype eq 'y'){  # subsample training set option
+			   print Rinput "xy <- sample_n(xy, 20000, replace = TRUE)\n";	  
+			   print Rinput "print('new dimension of training set')\n";
+			   print Rinput "dim(xy)\n";
+			   }
+			print Rinput "boost.xy <- ada(as.factor(class)~., data=xy, 18)\n";
    print Rinput "boost.pred <- predict(boost.xy, as.data.frame(test), type='vector')\n";
-   print Rinput "my_zero <- sum(boost.pred == 0)\n";
+			print Rinput "my_zero <- sum(boost.pred == 0)\n";
    print Rinput "my_one <- sum(boost.pred == 1)\n";
    print Rinput "my_freq <- my_zero/(my_zero + my_one)\n";
    print Rinput "print(my_freq)\n";
@@ -592,7 +647,7 @@ for (my $r = 1; $r<=$lengthID; $r++){
       $INrowNextNext = $IN[$i+2];
       @INrowNextNext = split(/\s+/, $INrowNextNext);
       $value2 = @INrowNextNext[1];
-      if ($search eq "Levels:"){$freqML = $value1; $dRMSF = $value2;}
+      if ($search eq "Levels:"){$freqML = $value1; $dRMSF = $value2; if($freqML eq 'NaN' || $freqML eq 'NA'){$freqML = 0.5;} }
       }
       close IN;
       if ($AApos ne ''){print OUT "$AApos\t"."$freqML\t"."$dRMSF\n";}
@@ -619,7 +674,7 @@ for (my $r = 1; $r<=$lengthID; $r++){
       $INrowNextNext = $IN[$i+2];
       @INrowNextNext = split(/\s+/, $INrowNextNext);
       $value2 = @INrowNextNext[1];
-      if ($search eq "Levels:"){$freqML = $value1; $dRMSF = $value2;}
+      if ($search eq "Levels:"){$freqML = $value1; $dRMSF = $value2; if($freqML eq 'NaN' || $freqML eq 'NA'){$freqML = 0.5;} }
       }
       close IN;
       if ($AApos ne ''){print OUT "$AApos\t"."$freqML\t"."$dRMSF\n";}
@@ -646,7 +701,7 @@ for (my $r = 1; $r<=$lengthID; $r++){
       $INrowNextNext = $IN[$i+2];
       @INrowNextNext = split(/\s+/, $INrowNextNext);
       $value2 = @INrowNextNext[1];
-      if ($search eq "Levels:"){$freqML = $value1; $dRMSF = $value2;}
+      if ($search eq "Levels:"){$freqML = $value1; $dRMSF = $value2; if($freqML eq 'NaN' || $freqML eq 'NA'){$freqML = 0.5;} }
       }
       close IN;
       if ($AApos ne ''){print OUT "$AApos\t"."$freqML\t"."$dRMSF\n";}
@@ -673,7 +728,7 @@ for (my $r = 1; $r<=$lengthID; $r++){
       $INrowNextNext = $IN[$i+2];
       @INrowNextNext = split(/\s+/, $INrowNextNext);
       $value2 = @INrowNextNext[1];
-      if ($search eq "Levels:"){$freqML = $value1; $dRMSF = $value2;}
+      if ($search eq "Levels:"){$freqML = $value1; $dRMSF = $value2; if($freqML eq 'NaN' || $freqML eq 'NA'){$freqML = 0.5;} }
       }
       close IN;
       if ($AApos ne ''){print OUT "$AApos\t"."$freqML\t"."$dRMSF\n";}
@@ -700,7 +755,7 @@ for (my $r = 1; $r<=$lengthID; $r++){
       $INrowNextNext = $IN[$i+2];
       @INrowNextNext = split(/\s+/, $INrowNextNext);
       $value2 = @INrowNextNext[1];
-      if ($search eq "Levels:"){$freqML = $value1; $dRMSF = $value2;}
+      if ($search eq "Levels:"){$freqML = $value1; $dRMSF = $value2; if($freqML eq 'NaN' || $freqML eq 'NA'){$freqML = 0.5;} }
       }
       close IN;
       if ($AApos ne ''){print OUT "$AApos\t"."$freqML\t"."$dRMSF\n";}
@@ -727,7 +782,7 @@ for (my $r = 1; $r<=$lengthID; $r++){
       $INrowNextNext = $IN[$i+2];
       @INrowNextNext = split(/\s+/, $INrowNextNext);
       $value2 = @INrowNextNext[1];
-      if ($search eq "Levels:"){$freqML = $value1; $dRMSF = $value2;}
+      if ($search eq "Levels:"){$freqML = $value1; $dRMSF = $value2; if($freqML eq 'NaN' || $freqML eq 'NA'){$freqML = 0.5;} }
       }
       close IN;
       if ($AApos ne ''){print OUT "$AApos\t"."$freqML\t"."$dRMSF\n";}
@@ -754,7 +809,7 @@ for (my $r = 1; $r<=$lengthID; $r++){
       $INrowNextNext = $IN[$i+2];
       @INrowNextNext = split(/\s+/, $INrowNextNext);
       $value2 = @INrowNextNext[1];
-      if ($search eq "Levels:"){$freqML = $value1; $dRMSF = $value2;}
+      if ($search eq "Levels:"){$freqML = $value1; $dRMSF = $value2; if($freqML eq 'NaN' || $freqML eq 'NA'){$freqML = 0.5;} }
       }
       close IN;
       if ($AApos ne ''){print OUT "$AApos\t"."$freqML\t"."$dRMSF\n";}
