@@ -480,7 +480,7 @@ if ($method_kern == 1){
 			print Rinput "print('dimension of training set')\n";
 			print Rinput "dim(xy)\n";
 			if($sampletype eq 'y'){  # subsample training set option
-			   print Rinput "xy <- sample_n(xy, 20000, replace = TRUE)\n";	  
+			   print Rinput "xy <- sample_n(xy, 10000, replace = TRUE)\n";	  
 			   print Rinput "print('new dimension of training set')\n";
 			   print Rinput "dim(xy)\n";
 			   }
