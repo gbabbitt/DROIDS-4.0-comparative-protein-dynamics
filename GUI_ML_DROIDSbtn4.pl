@@ -682,24 +682,35 @@ print Rinput "myplot4 <- ggplot() + geom_col(data = dataframe6, aes(x = var, y =
 print Rinput "myplot4final <- myplot4\n"; 
 }
 if ($bartype eq "conserved" && scalar(@variants) <= 8){
-print Rinput "dataframe6 = data.frame(var = my_impact_IDs, sum = my_impact_cons_sums, upperSE = my_impact_cons_sums_upperSE, lowerSE = my_impact_cons_sums_lowerSE)\n";
+print Rinput "dataframe6 = data.frame(var = my_impact_IDs, sum = my_impact_sums, upperSE = my_impact_sums_upperSE, lowerSE = my_impact_sums_lowerSE)\n";
 print Rinput "print(dataframe6)\n";
 print Rinput "myplot4 <- ggplot() + geom_col(data = dataframe6, aes(x = var, y = sum, fill = var)) + geom_errorbar(data = dataframe6, aes(x=var, ymin=lowerSE, ymax=upperSE), width=0.5, colour='gray', alpha=1, size=1) + scale_fill_brewer(palette = 'Set2') + ggtitle('conserved region impact (signif + ns)') + labs(x = 'variant', y = 'sum impact') + theme(legend.position = 'none', axis.text.x = element_text(angle = 30))\n"; 
 print Rinput "myplot4final <- myplot4\n"; 
 }
-if ($bartype eq "total" && scalar(@variants) > 8){
+if ($bartype eq "total" && scalar(@variants) > 8 && scalar(@variants) <=15){
 print Rinput "dataframe6 = data.frame(var = my_impact_IDs, sum = my_impact_sums, upperSE = my_impact_sums_upperSE, lowerSE = my_impact_sums_lowerSE)\n";
 print Rinput "print(dataframe6)\n";
 print Rinput "myplot4 <- ggplot() + geom_col(data = dataframe6, aes(x = var, y = sum, fill = var)) + geom_errorbar(data = dataframe6, aes(x=var, y = sum, ymin=lowerSE, ymax=upperSE), width=0.5, colour='gray', alpha=1, size=1) + ggtitle('total mutational impact (signif + ns)') + labs(x = 'variant', y = 'sum impact') + theme(legend.position = 'none', axis.text.x = element_text(angle = 30))\n"; 
 print Rinput "myplot4final <- myplot4\n"; 
 }
-if ($bartype eq "conserved" && scalar(@variants) > 8){
+if ($bartype eq "conserved" && scalar(@variants) > 8 && scalar(@variants) <= 15){
 print Rinput "dataframe6 = data.frame(var = my_impact_IDs, sum = my_impact_cons_sums, upperSE = my_impact_cons_sums_upperSE, lowerSE = my_impact_cons_sums_lowerSE)\n";
 print Rinput "print(dataframe6)\n";
 print Rinput "myplot4 <- ggplot() + geom_col(data = dataframe6, aes(x = var, y = sum, fill = var)) + geom_errorbar(data = dataframe6, aes(x=var, ymin=lowerSE, ymax=upperSE), width=0.5, colour='gray', alpha=1, size=1) + ggtitle('conserved region impact (signif + ns)') + labs(x = 'variant', y = 'sum impact') + theme(legend.position = 'none', axis.text.x = element_text(angle = 30))\n"; 
 print Rinput "myplot4final <- myplot4\n"; 
 }
-
+if ($bartype eq "total" && scalar(@variants) > 15){
+print Rinput "dataframe6 = data.frame(var = my_impact_IDs, sum = my_impact_sums, upperSE = my_impact_sums_upperSE, lowerSE = my_impact_sums_lowerSE)\n";
+print Rinput "print(dataframe6)\n";
+print Rinput "myplot4 <- ggplot() + geom_col(data = dataframe6, aes(x = var, y = sum, fill = var)) + geom_errorbar(data = dataframe6, aes(x=var, y = sum, ymin=lowerSE, ymax=upperSE), width=0.5, colour='gray', alpha=1, size=1) + ggtitle('total mutational impact (signif + ns)') + labs(x = 'variant', y = 'sum impact') + theme(legend.position = 'none', axis.text.x = element_text(angle = 30, size = 3))\n"; 
+print Rinput "myplot4final <- myplot4\n"; 
+}
+if ($bartype eq "conserved" && scalar(@variants) > 15){
+print Rinput "dataframe6 = data.frame(var = my_impact_IDs, sum = my_impact_cons_sums, upperSE = my_impact_cons_sums_upperSE, lowerSE = my_impact_cons_sums_lowerSE)\n";
+print Rinput "print(dataframe6)\n";
+print Rinput "myplot4 <- ggplot() + geom_col(data = dataframe6, aes(x = var, y = sum, fill = var)) + geom_errorbar(data = dataframe6, aes(x=var, ymin=lowerSE, ymax=upperSE), width=0.5, colour='gray', alpha=1, size=1) + ggtitle('conserved region impact (signif + ns)') + labs(x = 'variant', y = 'sum impact') + theme(legend.position = 'none', axis.text.x = element_text(angle = 30, size = 3))\n"; 
+print Rinput "myplot4final <- myplot4\n"; 
+}
 if ($bartype eq "total" && scalar(@variants) >= 4){ # ANOVA table from summary data
 print Rinput "library(rpsychi)\n";     
 print Rinput "dataframe7 = data.frame(var = my_impact_IDs, sum = my_impact_sums, sd = mySE, n = my_impact_n)\n";
