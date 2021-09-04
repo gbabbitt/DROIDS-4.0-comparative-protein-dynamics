@@ -259,7 +259,15 @@ my $pdbFrame = $mw->Frame();
 					-textvariable=>\$runsID
 					);
           $runsID = 1;  # this is hard coded for deployment on single run
-          
+
+    my $orthoFrame = $pdbFrame->Frame();
+		my $orthoLabel = $orthoFrame->Label(-text=>"PDB ID for evolutionary ortholog PDB file (e.g. 3ort)");
+		my $orthoEntry = $orthoFrame->Entry(-borderwidth => 2,
+					-relief => "groove",
+					-textvariable=>\$ortholog
+					);
+
+
       my $chainFrame = $pdbFrame->Frame();
 		my $chainLabel = $chainFrame->Label(-text=>"number of protein chains (e.g. 3 = A/B/C): ");
 		my $chainEntry = $chainFrame->Entry(-borderwidth => 2,
@@ -370,6 +378,8 @@ $tempLabel->pack(-side=>"left");
 $tempEntry->pack(-side=>"left");
 $chainLabel->pack(-side=>"left");
 $chainEntry->pack(-side=>"left");
+$orthoLabel->pack(-side=>"left");
+$orthoEntry->pack(-side=>"left");
 #$startLabel->pack(-side=>"left");
 #$startEntry->pack(-side=>"left");
 
@@ -386,6 +396,8 @@ $tempFrame->pack(-side=>"top",
 #$runsFrame->pack(-side=>"top",
 #		-anchor=>"e");
 $chainFrame->pack(-side=>"top",
+		-anchor=>"e");
+$orthoFrame->pack(-side=>"top",
 		-anchor=>"e");
 #$startFrame->pack(-side=>"top",
 #		-anchor=>"e");
@@ -455,6 +467,7 @@ open(MUT, ">"."variant_list.txt");
 print MUT "PDB_IDs\n";
 print MUT "$fileIDr"."_1\n";
 print MUT "$fileIDr"."_2\n";
+print MUT "$ortholog\n";
 close MUT;
 print "opening variant_list.txt using gedit\n\n";
 print "type PDB ID's for additional target protein variants under 'PDB_IDs' then save and close\n\n";
@@ -472,6 +485,7 @@ open(MUT, ">"."variant_label_list.txt");
 print MUT "names\n";
 print MUT "validation_run1\n";
 print MUT "validation_run2\n";
+print MUT "ortholog_run\n";
 close MUT;
 print "opening variant_label_list.txt using gedit\n\n";
 print "type names for additional variants as you want them to appear in plots then save and close\n\n";
