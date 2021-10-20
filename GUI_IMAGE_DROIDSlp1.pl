@@ -253,7 +253,7 @@ my $seriesButton = $mw -> Button(-text => "create time series files for machine 
                 -background => 'gray45',
                 -foreground => 'white'
 				); # Creates a time series button
-my $mlButton = $mw -> Button(-text => "create machine learning classifier on dynamics", 
+my $mlButton = $mw -> Button(-text => "create machine learning classifier on dynamics (maxDemon)", 
 				-command => \&ml,
                 -background => 'gray45',
                 -foreground => 'white'
@@ -918,6 +918,7 @@ sleep(1); print("\ntime series files created\n\n"); sleep(1);
 ##########################################################################################################
 sub ml {
 #system "perl GUI_ML_DROIDS.pl\n";
-system "python maxDemon.py\n";    
+system "python maxDemon.py\n";
+print "\n\nIf python-kivy GUI fails, type 'perl maxDemon.pl' at terminal\n\n";
 }
 ###########################################################################################################
