@@ -12,7 +12,7 @@ Biophysical Journal, Volume 118, Issue 3, 541 - 55
 ![image](/DROIDSgui.png)
 
 To run DROIDS v4.0:
-python DROIDS.py 
+python DROIDS.py OR perl DROIDS.pl
 
 a GUI based script PATHS.pl will prompt paths to working directories for UCSF Chimera, Amber forcefields, and Amber Home directory and write a .ctl file. Then the main DROIDS menu will pop up. Requires Amber 16/18 license and some dependencies in R, python and perl (see user doc with download)
 
